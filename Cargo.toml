@@ -34,8 +34,8 @@ tracing = "0.1"
 tracing-subscriber = "0.3"
 uuid = { version = "1.10", features = ["v4", "serde"] }
 new-vdf-parser = "0.2.0"
-tray-icon = "0.21"
-muda = "0.17"
+tray-icon = { version = "0.21", default-features = false }
+muda = { version = "0.17", default-features = false, features = ["gtk"] }
 notify-rust = "4.11.7"
 
 [target.'cfg(unix)'.dependencies]
