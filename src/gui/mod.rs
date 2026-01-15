@@ -3,6 +3,7 @@
 
 pub mod add_game_dialog;
 pub mod confirmation_dialog;
+pub mod context_menu;
 pub mod file_picker;
 pub mod log_viewer_dialog;
 pub mod main_window;
@@ -11,6 +12,7 @@ pub mod settings_dialog;
 
 use add_game_dialog::AddGameDialog;
 use confirmation_dialog::ConfirmationDialog;
+use context_menu::ContextMenu;
 use log_viewer_dialog::LogViewerDialog;
 use proton_manager_dialog::ProtonManagerDialog;
 use settings_dialog::SettingsDialog;
@@ -24,4 +26,5 @@ pub enum DialogState {
     Confirmation(Box<ConfirmationDialog>),
     LogViewer(Box<LogViewerDialog>),
     ProtonManager(Box<ProtonManagerDialog>),
+    ContextMenu(Box<ContextMenu>),
 }

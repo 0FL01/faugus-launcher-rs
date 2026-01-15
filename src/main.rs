@@ -12,14 +12,15 @@ mod steam;
 mod tray;
 mod utils;
 
-use iced::widget::{container, stack};
-use iced::{window, Color, Element, Length, Size, Task};
+use iced::widget::{container, mouse_area, stack};
+use iced::{window, Color, Element, Length, Padding, Point, Size, Task};
 use tracing::{error, info, warn};
 
 use config::app_config::AppConfig;
 use config::game_config::Game;
 use gui::add_game_dialog::{AddGameDialog, AddGameMessage};
 use gui::confirmation_dialog::ConfirmationDialog;
+use gui::context_menu::{ContextMenu, ContextMenuMessage};
 use gui::log_viewer_dialog::{LogViewerDialog, LogViewerMessage};
 use gui::main_window::MainWindow;
 use gui::proton_manager_dialog::{ProtonManagerDialog, ProtonManagerMessage};
@@ -80,6 +81,11 @@ pub enum Message {
     // Confirmation Dialog
     ShowConfirmationDialog(Box<ConfirmationDialog>),
     ConfirmationDialogClosed(bool),
+    // Context Menu
+    GameRightClicked(usize),
+    ContextMenu(ContextMenuMessage),
+    CloseContextMenu,
+    MouseMoved(Point),
 }
 
 use gui::DialogState;
@@ -90,6 +96,7 @@ pub struct FaugusLauncher {
     dialog: DialogState,
     pending_delete_index: Option<usize>,
     system_tray: Option<SystemTray>,
+    mouse_position: Point,
 }
 
 impl FaugusLauncher {
@@ -145,6 +152,7 @@ impl FaugusLauncher {
                 dialog: DialogState::None,
                 pending_delete_index: None,
                 system_tray,
+                mouse_position: Point::ORIGIN,
             },
             Task::done(Message::Loaded),
         )
@@ -236,8 +244,45 @@ impl FaugusLauncher {
             Message::CloseAddGameDialog
             | Message::CloseSettingsDialog
             | Message::CloseLogViewerDialog
-            | Message::CloseProtonManagerDialog => {
+            | Message::CloseProtonManagerDialog
+            | Message::CloseContextMenu => {
                 self.dialog = DialogState::None;
+                Task::none()
+            }
+            Message::MouseMoved(position) => {
+                self.mouse_position = position;
+                Task::none()
+            }
+            Message::GameRightClicked(index) => {
+                let menu = ContextMenu::new(index, self.mouse_position);
+                self.dialog = DialogState::ContextMenu(Box::new(menu));
+                Task::none()
+            }
+            Message::ContextMenu(msg) => {
+                if let DialogState::ContextMenu(menu) = &self.dialog {
+                    let game_index = menu.game_index;
+                    match msg {
+                        ContextMenuMessage::OpenLocation => {
+                            if let Some(game) = self.main_window.games().get(game_index) {
+                                let path = std::path::Path::new(&game.path);
+                                if let Some(parent) = path.parent() {
+                                    let _ = open::that(parent);
+                                }
+                            }
+                            self.dialog = DialogState::None;
+                        }
+                        ContextMenuMessage::OpenPrefix => {
+                            if let Some(game) = self.main_window.games().get(game_index) {
+                                let _ = open::that(&game.prefix);
+                            }
+                            self.dialog = DialogState::None;
+                        }
+                        ContextMenuMessage::ShowLogs => {
+                            self.dialog = DialogState::None;
+                            return Task::done(Message::ShowLogViewerDialog);
+                        }
+                    }
+                }
                 Task::none()
             }
             Message::AddGameDialog(msg) => {
@@ -343,6 +388,7 @@ impl FaugusLauncher {
                     DialogState::Confirmation(_) => false,
                     DialogState::LogViewer(_) => false,
                     DialogState::ProtonManager(_) => false,
+                    DialogState::ContextMenu(_) => false,
                 };
 
                 if should_close {
@@ -387,6 +433,7 @@ impl FaugusLauncher {
                     DialogState::Confirmation(_) => false,
                     DialogState::LogViewer(_) => false,
                     DialogState::ProtonManager(_) => false,
+                    DialogState::ContextMenu(_) => false,
                 };
 
                 if should_close {
@@ -410,6 +457,7 @@ impl FaugusLauncher {
                     DialogState::Settings(_) => false,
                     DialogState::Confirmation(_) => false,
                     DialogState::ProtonManager(_) => false,
+                    DialogState::ContextMenu(_) => false,
                 };
 
                 if should_close {
@@ -432,6 +480,7 @@ impl FaugusLauncher {
                     DialogState::Settings(_) => false,
                     DialogState::Confirmation(_) => false,
                     DialogState::LogViewer(_) => false,
+                    DialogState::ContextMenu(_) => false,
                 };
 
                 if should_close {
@@ -548,14 +597,33 @@ impl FaugusLauncher {
     }
 
     fn view(&self) -> Element<'_, Message> {
-        let main_content = self.main_window.view();
+        let main_content = mouse_area(self.main_window.view()).on_move(Message::MouseMoved);
 
         if let DialogState::None = self.dialog {
-            return main_content;
+            return main_content.into();
+        }
+
+        if let DialogState::ContextMenu(menu) = &self.dialog {
+            let menu_content = menu.view(self.main_window.i18n()).map(Message::ContextMenu);
+
+            let overlay = mouse_area(
+                container(menu_content)
+                    .width(Length::Fill)
+                    .height(Length::Fill)
+                    .padding(Padding {
+                        top: menu.position.y,
+                        left: menu.position.x,
+                        ..Padding::ZERO
+                    }),
+            )
+            .on_press(Message::CloseContextMenu);
+
+            return stack![main_content, overlay].into();
         }
 
         let dialog_content: Element<'_, Message> = match &self.dialog {
             DialogState::None => unreachable!(),
+            DialogState::ContextMenu(_) => unreachable!(),
             DialogState::AddGame(dialog) => container(
                 dialog
                     .view(self.main_window.i18n())

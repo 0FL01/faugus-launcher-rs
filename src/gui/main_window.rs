@@ -396,6 +396,7 @@ impl MainWindow {
                 // Wrap in mouse_area for click handling
                 mouse_area(container)
                     .on_press(Message::GameClicked(index))
+                    .on_right_press(Message::GameRightClicked(index))
                     .into()
             })
             .collect();
