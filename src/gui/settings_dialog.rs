@@ -1,18 +1,20 @@
 // Settings Dialog
 // Configuration dialog for Faugus Launcher
 
-use iced::widget::{button, checkbox, column, row, scrollable, text, text_input, Space};
-use iced::{Element, Length};
+use iced::widget::{button, checkbox, column, pick_list, row, scrollable, text, text_input, Space};
+use iced::{Element, Length, Task};
+use std::fmt;
 use std::path::PathBuf;
 
 use crate::config::{AppConfig, InterfaceMode};
+use crate::gui::file_picker;
 use crate::locale::I18n;
 
 /// Messages for the Settings dialog
 #[derive(Debug, Clone)]
 pub enum SettingsMessage {
     // General Settings
-    LanguageChanged(String),
+    LanguageChanged(Language),
     InterfaceModeChanged(InterfaceMode),
     StartMaximizedToggled(bool),
     StartFullscreenToggled(bool),
@@ -24,8 +26,10 @@ pub enum SettingsMessage {
     // Path Settings
     DefaultPrefixChanged(String),
     BrowseDefaultPrefix,
+    DefaultPrefixPicked(Option<PathBuf>),
     LosslessLocationChanged(String),
     BrowseLosslessLocation,
+    LosslessLocationPicked(Option<PathBuf>),
     DefaultRunnerChanged(String),
 
     // Performance Settings
@@ -62,6 +66,19 @@ pub enum SettingsMessage {
     Cancel,
 }
 
+/// Language option for the pick list
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Language {
+    pub code: String,
+    pub name: String,
+}
+
+impl fmt::Display for Language {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.name)
+    }
+}
+
 /// State for the Settings dialog
 #[derive(Debug, Clone)]
 pub struct SettingsDialog {
@@ -76,7 +93,7 @@ pub struct SettingsDialog {
     runner_index: usize,
 
     // Available options
-    languages: Vec<(String, String)>, // (code, name)
+    languages: Vec<Language>,
     interface_modes: Vec<InterfaceMode>,
     runners: Vec<String>,
 
@@ -93,7 +110,7 @@ impl SettingsDialog {
         let languages = Self::get_supported_languages();
         let language_index = languages
             .iter()
-            .position(|(code, _)| code == &config.language)
+            .position(|l| l.code == config.language)
             .unwrap_or(0);
 
         let interface_modes = vec![
@@ -127,25 +144,76 @@ impl SettingsDialog {
     }
 
     /// Get supported languages
-    fn get_supported_languages() -> Vec<(String, String)> {
+    fn get_supported_languages() -> Vec<Language> {
         vec![
-            ("af".to_string(), "Afrikaans".to_string()),
-            ("ar".to_string(), "Arabic".to_string()),
-            ("de".to_string(), "German".to_string()),
-            ("el".to_string(), "Greek".to_string()),
-            ("en_US".to_string(), "English".to_string()),
-            ("es".to_string(), "Spanish".to_string()),
-            ("fa".to_string(), "Persian".to_string()),
-            ("fr".to_string(), "French".to_string()),
-            ("hu".to_string(), "Hungarian".to_string()),
-            ("it".to_string(), "Italian".to_string()),
-            ("nl".to_string(), "Dutch".to_string()),
-            ("pl".to_string(), "Polish".to_string()),
-            ("pt_BR".to_string(), "Portuguese (Brazil)".to_string()),
-            ("ru".to_string(), "Russian".to_string()),
-            ("sv".to_string(), "Swedish".to_string()),
-            ("uk".to_string(), "Ukrainian".to_string()),
-            ("zh_CN".to_string(), "Chinese (Simplified)".to_string()),
+            Language {
+                code: "af".to_string(),
+                name: "Afrikaans".to_string(),
+            },
+            Language {
+                code: "ar".to_string(),
+                name: "Arabic".to_string(),
+            },
+            Language {
+                code: "de".to_string(),
+                name: "German".to_string(),
+            },
+            Language {
+                code: "el".to_string(),
+                name: "Greek".to_string(),
+            },
+            Language {
+                code: "en_US".to_string(),
+                name: "English".to_string(),
+            },
+            Language {
+                code: "es".to_string(),
+                name: "Spanish".to_string(),
+            },
+            Language {
+                code: "fa".to_string(),
+                name: "Persian".to_string(),
+            },
+            Language {
+                code: "fr".to_string(),
+                name: "French".to_string(),
+            },
+            Language {
+                code: "hu".to_string(),
+                name: "Hungarian".to_string(),
+            },
+            Language {
+                code: "it".to_string(),
+                name: "Italian".to_string(),
+            },
+            Language {
+                code: "nl".to_string(),
+                name: "Dutch".to_string(),
+            },
+            Language {
+                code: "pl".to_string(),
+                name: "Polish".to_string(),
+            },
+            Language {
+                code: "pt_BR".to_string(),
+                name: "Portuguese (Brazil)".to_string(),
+            },
+            Language {
+                code: "ru".to_string(),
+                name: "Russian".to_string(),
+            },
+            Language {
+                code: "sv".to_string(),
+                name: "Swedish".to_string(),
+            },
+            Language {
+                code: "uk".to_string(),
+                name: "Ukrainian".to_string(),
+            },
+            Language {
+                code: "zh_CN".to_string(),
+                name: "Chinese (Simplified)".to_string(),
+            },
         ]
     }
 
@@ -159,14 +227,12 @@ impl SettingsDialog {
     }
 
     /// Update the dialog state
-    pub fn update(&mut self, message: SettingsMessage) {
+    pub fn update(&mut self, message: SettingsMessage) -> Task<SettingsMessage> {
         match message {
-            SettingsMessage::LanguageChanged(code) => {
-                if let Some((_, _name)) = self.languages.iter().find(|(c, _)| c == &code) {
-                    if let Some(idx) = self.languages.iter().position(|(c, _)| c == &code) {
-                        self.language_index = idx;
-                    }
-                    self.config.language = code;
+            SettingsMessage::LanguageChanged(lang) => {
+                if let Some(idx) = self.languages.iter().position(|l| l.code == lang.code) {
+                    self.language_index = idx;
+                    self.config.language = lang.code;
                 }
             }
             SettingsMessage::InterfaceModeChanged(mode) => {
@@ -201,15 +267,29 @@ impl SettingsDialog {
                 self.config.default_prefix = PathBuf::from(path);
             }
             SettingsMessage::BrowseDefaultPrefix => {
-                // TODO: Implement file picker
-                tracing::info!("Browse for default prefix");
+                return Task::perform(
+                    file_picker::pick_folder(),
+                    SettingsMessage::DefaultPrefixPicked,
+                );
+            }
+            SettingsMessage::DefaultPrefixPicked(path) => {
+                if let Some(path) = path {
+                    self.config.default_prefix = path;
+                }
             }
             SettingsMessage::LosslessLocationChanged(path) => {
                 self.config.lossless_location = PathBuf::from(path);
             }
             SettingsMessage::BrowseLosslessLocation => {
-                // TODO: Implement file picker
-                tracing::info!("Browse for Lossless Scaling DLL");
+                return Task::perform(
+                    file_picker::pick_file(),
+                    SettingsMessage::LosslessLocationPicked,
+                );
+            }
+            SettingsMessage::LosslessLocationPicked(path) => {
+                if let Some(path) = path {
+                    self.config.lossless_location = path;
+                }
             }
             SettingsMessage::DefaultRunnerChanged(runner) => {
                 if let Some(idx) = self.runners.iter().position(|r| r == &runner) {
@@ -297,7 +377,7 @@ impl SettingsDialog {
                 self.language_index = self
                     .languages
                     .iter()
-                    .position(|(code, _)| code == &self.config.language)
+                    .position(|l| l.code == self.config.language)
                     .unwrap_or(0);
                 self.interface_mode_index = self
                     .interface_modes
@@ -314,6 +394,7 @@ impl SettingsDialog {
                 // Handled by the caller
             }
         }
+        Task::none()
     }
 
     /// Get the updated configuration
@@ -380,14 +461,6 @@ impl SettingsDialog {
 
     /// View general settings section
     fn view_general_section(&self, i18n: &I18n) -> Element<'_, SettingsMessage> {
-        let language_display = self
-            .languages
-            .get(self.language_index)
-            .map(|(_, name)| name.clone())
-            .unwrap_or_default();
-
-        let interface_mode_display = format!("{:?}", self.config.interface_mode);
-
         column![
             text(i18n.t("General")).size(18),
             Space::with_height(Length::Fixed(10.0)),
@@ -395,8 +468,12 @@ impl SettingsDialog {
             column![
                 text(i18n.t("Language")).size(14),
                 Space::with_height(Length::Fixed(5.0)),
-                text(language_display).size(14),
-                // TODO: Replace with actual dropdown
+                pick_list(
+                    &self.languages[..],
+                    self.languages.get(self.language_index).cloned(),
+                    SettingsMessage::LanguageChanged
+                )
+                .width(Length::Fill),
             ]
             .spacing(5),
             Space::with_height(Length::Fixed(10.0)),
@@ -404,8 +481,12 @@ impl SettingsDialog {
             column![
                 text(i18n.t("Interface Mode")).size(14),
                 Space::with_height(Length::Fixed(5.0)),
-                text(interface_mode_display).size(14),
-                // TODO: Replace with actual dropdown
+                pick_list(
+                    &InterfaceMode::ALL[..],
+                    Some(self.config.interface_mode),
+                    SettingsMessage::InterfaceModeChanged
+                )
+                .width(Length::Fill),
             ]
             .spacing(5),
             Space::with_height(Length::Fixed(10.0)),
@@ -431,11 +512,6 @@ impl SettingsDialog {
     fn view_paths_section(&self, i18n: &I18n) -> Element<'_, SettingsMessage> {
         let prefix_display = self.config.default_prefix.display().to_string();
         let lossless_display = self.config.lossless_location.display().to_string();
-        let runner_display = self
-            .runners
-            .get(self.runner_index)
-            .cloned()
-            .unwrap_or_default();
 
         column![
             text(i18n.t("Paths")).size(18),
@@ -473,11 +549,12 @@ impl SettingsDialog {
             column![
                 text(i18n.t("Default Proton")).size(14),
                 Space::with_height(Length::Fixed(5.0)),
-                row![
-                    text(runner_display).size(14),
-                    // TODO: Replace with dropdown
-                ]
-                .spacing(5),
+                pick_list(
+                    &self.runners[..],
+                    self.runners.get(self.runner_index).cloned(),
+                    SettingsMessage::DefaultRunnerChanged
+                )
+                .width(Length::Fill),
             ]
             .spacing(5),
         ]

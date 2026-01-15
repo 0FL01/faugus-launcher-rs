@@ -22,6 +22,7 @@ use gui::add_game_dialog::{AddGameDialog, AddGameMessage};
 use gui::confirmation_dialog::ConfirmationDialog;
 use gui::log_viewer_dialog::{LogViewerDialog, LogViewerMessage};
 use gui::main_window::MainWindow;
+use gui::proton_manager_dialog::{ProtonManagerDialog, ProtonManagerMessage};
 use gui::settings_dialog::{SettingsDialog, SettingsMessage};
 use icons::IconManager;
 use launcher::LaunchMessage;
@@ -70,6 +71,10 @@ pub enum Message {
     LogViewerDialog(LogViewerMessage),
     ShowLogViewerDialog,
     CloseLogViewerDialog,
+    // Proton Manager Dialog messages
+    ProtonManagerDialog(ProtonManagerMessage),
+    ShowProtonManagerDialog,
+    CloseProtonManagerDialog,
     // System Tray messages
     TrayEvent(TrayEvent),
     // Confirmation Dialog
@@ -77,15 +82,7 @@ pub enum Message {
     ConfirmationDialogClosed(bool),
 }
 
-/// Dialog state
-#[derive(Debug, Clone)]
-enum DialogState {
-    None,
-    AddGame(AddGameDialog),
-    Settings(SettingsDialog),
-    Confirmation(Box<ConfirmationDialog>),
-    LogViewer(LogViewerDialog),
-}
+use gui::DialogState;
 
 /// Main application state
 pub struct FaugusLauncher {
@@ -190,6 +187,11 @@ impl FaugusLauncher {
                 self.dialog = DialogState::LogViewer(dialog);
                 Task::none()
             }
+            Message::ShowProtonManagerDialog => {
+                let dialog = ProtonManagerDialog::new();
+                self.dialog = DialogState::ProtonManager(dialog);
+                Task::none()
+            }
             Message::ShowConfirmationDialog(dialog) => {
                 self.dialog = DialogState::Confirmation(dialog);
                 Task::none()
@@ -233,7 +235,8 @@ impl FaugusLauncher {
             }
             Message::CloseAddGameDialog
             | Message::CloseSettingsDialog
-            | Message::CloseLogViewerDialog => {
+            | Message::CloseLogViewerDialog
+            | Message::CloseProtonManagerDialog => {
                 self.dialog = DialogState::None;
                 Task::none()
             }
@@ -276,10 +279,7 @@ impl FaugusLauncher {
                                                 if let Err(e) = shortcuts.add_or_update(&game) {
                                                     error!("Failed to add Steam shortcut: {}", e);
                                                 } else if let Err(e) = shortcuts.save() {
-                                                    error!(
-                                                        "Failed to save Steam shortcuts: {}",
-                                                        e
-                                                    );
+                                                    error!("Failed to save Steam shortcuts: {}", e);
                                                 } else {
                                                     info!(
                                                         "Steam shortcut added for: {}",
@@ -334,8 +334,7 @@ impl FaugusLauncher {
                             }
                             AddGameMessage::Cancel => true,
                             _ => {
-                                dialog.update(msg);
-                                false
+                                return dialog.update(msg.clone()).map(Message::AddGameDialog);
                             }
                         }
                     }
@@ -343,6 +342,7 @@ impl FaugusLauncher {
                     DialogState::Settings(_) => false,
                     DialogState::Confirmation(_) => false,
                     DialogState::LogViewer(_) => false,
+                    DialogState::ProtonManager(_) => false,
                 };
 
                 if should_close {
@@ -373,9 +373,12 @@ impl FaugusLauncher {
                                 // Open the log viewer dialog
                                 return Task::done(Message::ShowLogViewerDialog);
                             }
+                            SettingsMessage::ProtonManagerClicked => {
+                                // Open the proton manager dialog
+                                return Task::done(Message::ShowProtonManagerDialog);
+                            }
                             _ => {
-                                dialog.update(msg);
-                                false
+                                return dialog.update(msg.clone()).map(Message::SettingsDialog);
                             }
                         }
                     }
@@ -383,6 +386,7 @@ impl FaugusLauncher {
                     DialogState::AddGame(_) => false,
                     DialogState::Confirmation(_) => false,
                     DialogState::LogViewer(_) => false,
+                    DialogState::ProtonManager(_) => false,
                 };
 
                 if should_close {
@@ -405,6 +409,29 @@ impl FaugusLauncher {
                     DialogState::AddGame(_) => false,
                     DialogState::Settings(_) => false,
                     DialogState::Confirmation(_) => false,
+                    DialogState::ProtonManager(_) => false,
+                };
+
+                if should_close {
+                    self.dialog = DialogState::None;
+                }
+
+                Task::none()
+            }
+            Message::ProtonManagerDialog(msg) => {
+                // Handle proton manager dialog messages
+                let should_close = match &mut self.dialog {
+                    DialogState::ProtonManager(dialog) => match &msg {
+                        ProtonManagerMessage::Close => true,
+                        _ => {
+                            return dialog.update(msg.clone()).map(Message::ProtonManagerDialog);
+                        }
+                    },
+                    DialogState::None => false,
+                    DialogState::AddGame(_) => false,
+                    DialogState::Settings(_) => false,
+                    DialogState::Confirmation(_) => false,
+                    DialogState::LogViewer(_) => false,
                 };
 
                 if should_close {
@@ -597,6 +624,33 @@ impl FaugusLauncher {
                     backdrop,
                     container(dialog_view)
                         .width(iced::Length::Fixed(900.0))
+                        .height(iced::Length::Fill)
+                        .padding(20)
+                ])
+                .width(iced::Length::Fill)
+                .height(iced::Length::Fill)
+                .into()
+            }
+            DialogState::ProtonManager(dialog) => {
+                // Show proton manager overlay
+                let _main_content = self.main_window.view();
+
+                // Create an overlay with the dialog
+                let dialog_view = dialog
+                    .view(self.main_window.i18n())
+                    .map(Message::ProtonManagerDialog);
+
+                // Create a semi-transparent backdrop
+                let backdrop = container(text(""))
+                    .width(iced::Length::Fill)
+                    .height(iced::Length::Fill)
+                    .style(iced::widget::container::transparent);
+
+                // Stack the dialog on top
+                container(column![
+                    backdrop,
+                    container(dialog_view)
+                        .width(iced::Length::Fixed(800.0))
                         .height(iced::Length::Fill)
                         .padding(20)
                 ])

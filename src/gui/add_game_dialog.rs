@@ -1,12 +1,56 @@
 // Add Game Dialog
 // Dialog for adding or editing games in Faugus Launcher
 
-use iced::widget::{button, checkbox, column, container, row, scrollable, text, text_input, Space};
+use iced::widget::{
+    button, checkbox, column, container, pick_list, row, scrollable, text, text_input, Space,
+};
 use iced::{Element, Length, Task};
+use std::fmt;
 use std::path::PathBuf;
 
 use crate::config::{AppConfig, Game};
+use crate::gui::file_picker;
 use crate::locale::I18n;
+
+/// Launcher types supported by Faugus Launcher
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum LauncherType {
+    #[default]
+    Steam,
+    Heroic,
+    Lutris,
+    Epic,
+    Gog,
+    Other,
+}
+
+impl LauncherType {
+    pub const ALL: [LauncherType; 6] = [
+        LauncherType::Steam,
+        LauncherType::Heroic,
+        LauncherType::Lutris,
+        LauncherType::Epic,
+        LauncherType::Gog,
+        LauncherType::Other,
+    ];
+}
+
+impl fmt::Display for LauncherType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                LauncherType::Steam => "Steam",
+                LauncherType::Heroic => "Heroic",
+                LauncherType::Lutris => "Lutris",
+                LauncherType::Epic => "Epic",
+                LauncherType::Gog => "GOG",
+                LauncherType::Other => "Other",
+            }
+        )
+    }
+}
 
 /// Messages for the Add Game dialog
 #[derive(Debug, Clone)]
@@ -17,6 +61,8 @@ pub enum AddGameMessage {
     PathChanged(String),
     /// Prefix changed
     PrefixChanged(String),
+    /// Launcher type changed
+    LauncherTypeChanged(LauncherType),
     /// Runner changed
     RunnerChanged(String),
     /// Protonfix (UMU ID) changed
@@ -41,10 +87,16 @@ pub enum AddGameMessage {
     ShortcutSteamToggled(bool),
     /// Browse for game executable
     BrowsePath,
+    /// Game executable picked
+    PathPicked(Option<PathBuf>),
     /// Browse for prefix
     BrowsePrefix,
+    /// Prefix picked
+    PrefixPicked(Option<PathBuf>),
     /// Browse for additional app
     BrowseAddApp,
+    /// Additional app picked
+    AddAppPicked(Option<PathBuf>),
     /// Open Protonfix URL in browser
     OpenProtonfixUrl,
     /// Lossless Scaling button clicked
@@ -72,6 +124,8 @@ pub struct AddGameDialog {
     game_path: PathBuf,
     /// Wine prefix path
     prefix: PathBuf,
+    /// Launcher type
+    launcher_type: LauncherType,
     /// Selected runner index
     runner_index: usize,
     /// Available runners list
@@ -134,6 +188,7 @@ impl AddGameDialog {
             game_title: String::new(),
             game_path: PathBuf::new(),
             prefix: config.default_prefix.clone(),
+            launcher_type: LauncherType::default(),
             runner_index: default_runner_index,
             runners,
             protonfix: String::new(),
@@ -170,6 +225,7 @@ impl AddGameDialog {
         dialog.game_title = game.title;
         dialog.game_path = game.path;
         dialog.prefix = game.prefix;
+        dialog.launcher_type = LauncherType::default(); // Default for now
         dialog.protonfix = game.protonfix;
         dialog.launch_arguments = game.launch_arguments;
         dialog.game_arguments = game.game_arguments;
@@ -236,6 +292,9 @@ impl AddGameDialog {
                 self.prefix = PathBuf::from(prefix);
                 self.error_message = None;
             }
+            AddGameMessage::LauncherTypeChanged(launcher_type) => {
+                self.launcher_type = launcher_type;
+            }
             AddGameMessage::RunnerChanged(runner) => {
                 if let Some(index) = self.runners.iter().position(|r| r == &runner) {
                     self.runner_index = index;
@@ -272,17 +331,28 @@ impl AddGameDialog {
                 self.shortcut_steam = enabled;
             }
             AddGameMessage::BrowsePath => {
-                // TODO: Implement file picker
-                // For now, this is a placeholder
-                tracing::info!("Browse for game executable");
+                return Task::perform(file_picker::pick_file(), AddGameMessage::PathPicked);
+            }
+            AddGameMessage::PathPicked(path) => {
+                if let Some(path) = path {
+                    self.game_path = path;
+                }
             }
             AddGameMessage::BrowsePrefix => {
-                // TODO: Implement folder picker
-                tracing::info!("Browse for prefix");
+                return Task::perform(file_picker::pick_folder(), AddGameMessage::PrefixPicked);
+            }
+            AddGameMessage::PrefixPicked(path) => {
+                if let Some(path) = path {
+                    self.prefix = path;
+                }
             }
             AddGameMessage::BrowseAddApp => {
-                // TODO: Implement file picker
-                tracing::info!("Browse for additional app");
+                return Task::perform(file_picker::pick_file(), AddGameMessage::AddAppPicked);
+            }
+            AddGameMessage::AddAppPicked(path) => {
+                if let Some(path) = path {
+                    self.addapp_path = path;
+                }
             }
             AddGameMessage::OpenProtonfixUrl => {
                 // TODO: Open browser with UMU ID URL
@@ -465,6 +535,7 @@ impl AddGameDialog {
         let title_section = self.view_title_section(i18n);
         let path_section = self.view_path_section(i18n);
         let prefix_section = self.view_prefix_section(i18n);
+        let launcher_type_section = self.view_launcher_type_section(i18n);
         let runner_section = self.view_runner_section(i18n);
         let protonfix_section = self.view_protonfix_section(i18n);
         let arguments_section = self.view_arguments_section(i18n);
@@ -478,6 +549,8 @@ impl AddGameDialog {
             path_section,
             Space::with_height(Length::Fixed(10.0)),
             prefix_section,
+            Space::with_height(Length::Fixed(10.0)),
+            launcher_type_section,
             Space::with_height(Length::Fixed(10.0)),
             runner_section,
             Space::with_height(Length::Fixed(10.0)),
@@ -549,20 +622,33 @@ impl AddGameDialog {
         .into()
     }
 
+    /// View the launcher type section
+    fn view_launcher_type_section(&self, i18n: &I18n) -> Element<'_, AddGameMessage> {
+        column![
+            text(i18n.t("Launcher")).size(14),
+            Space::with_height(Length::Fixed(5.0)),
+            pick_list(
+                &LauncherType::ALL[..],
+                Some(self.launcher_type),
+                AddGameMessage::LauncherTypeChanged
+            )
+            .width(Length::Fill),
+        ]
+        .spacing(5)
+        .into()
+    }
+
     /// View the runner section
     fn view_runner_section(&self, i18n: &I18n) -> Element<'_, AddGameMessage> {
-        // For now, just show a simple dropdown (we'll use a picker later)
         column![
             text(i18n.t("Proton")).size(14),
             Space::with_height(Length::Fixed(5.0)),
-            text(
-                self.runners
-                    .get(self.runner_index)
-                    .cloned()
-                    .unwrap_or_default()
+            pick_list(
+                &self.runners[..],
+                self.runners.get(self.runner_index).cloned(),
+                AddGameMessage::RunnerChanged
             )
-            .size(16),
-            // TODO: Replace with actual dropdown/picker widget
+            .width(Length::Fill),
         ]
         .spacing(5)
         .into()

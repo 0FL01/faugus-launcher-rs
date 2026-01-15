@@ -28,12 +28,14 @@ impl I18n {
         let mut translations = HashMap::new();
 
         // Try to load from system locale directory
-        let _locale_paths = [Self::get_locale_dir(format!("faugus-launcher-{}", language)),
+        let _locale_paths = [
+            Self::get_locale_dir(format!("faugus-launcher-{}", language)),
             Self::get_locale_dir(format!("faugus-launcher_{}", language)),
             Self::get_locale_dir(format!(
                 "locales/{}/LC_MESSAGES/faugus-launcher.mo",
                 language
-            ))];
+            )),
+        ];
 
         // For now, use built-in translations
         // In production, you would load .mo files or use gettext

@@ -1,16 +1,12 @@
 // Proton Manager GUI
 // Dialog for managing Proton versions
 
-use iced::widget::{
-    button, column, container, horizontal_rule, row, scrollable, text, Space,
-};
+use iced::widget::{button, column, container, horizontal_rule, row, scrollable, text, Space};
 use iced::{Alignment, Element, Length, Task};
 use std::path::PathBuf;
 
 use crate::locale::I18n;
-use crate::proton::proton_manager::{
-    ProtonManager, ProtonRelease, PROTON_CONFIGS,
-};
+use crate::proton::proton_manager::{ProtonManager, ProtonRelease, PROTON_CONFIGS};
 
 /// Messages for the Proton Manager
 #[derive(Debug, Clone)]

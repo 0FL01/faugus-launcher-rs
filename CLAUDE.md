@@ -18,16 +18,19 @@ faugus-launcher/
 ├── Cargo.toml                   # Зависимости Rust проекта
 ├── src/
 │   ├── main.rs                  # Точка входа приложения
-│   ├── config/                  # Загрузка/сохранение настроек
-│   ├── gui/                     # Интерфейс на библиотеке Iced
+│   ├── config/                  # Настройки (приложение, игры, пути)
+│   ├── gui/                     # Интерфейс на Iced (окна, диалоги)
+│   │   ├── main_window.rs       # Главное окно
+│   │   ├── settings_dialog.rs   # Настройки
 │   │   └── log_viewer_dialog.rs # Просмотр логов
 │   ├── launcher/                # Логика запуска (UMU, MangoHud, GameMode)
 │   ├── locale/                  # Система локализации (i18n)
 │   ├── proton/                  # Менеджер версий Proton
 │   ├── shortcuts/               # Создание .desktop файлов
-│   ├── steam/                   # Интеграция со Steam (парсинг VDF)
+│   ├── steam/                   # Интеграция со Steam (VDF)
 │   ├── tray/                    # Системный трей (tray-icon)
-│   └── utils/                   # Утилиты и компоненты (EAC/BattlEye)
+│   ├── icons/                   # Менеджер иконок
+│   └── utils/                   # Компоненты (EAC/BattlEye)
 ```
 
 ### 🐍 Python (Legacy версия 1.13.5)

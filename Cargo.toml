@@ -37,6 +37,7 @@ new-vdf-parser = "0.2.0"
 tray-icon = { version = "0.21", default-features = false }
 muda = { version = "0.17", default-features = false, features = ["gtk"] }
 notify-rust = "4.11.7"
+rfd = "0.17"
 
 [target.'cfg(unix)'.dependencies]
 nix = { version = "0.29", features = ["process", "signal"] }

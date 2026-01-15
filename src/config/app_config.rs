@@ -3,6 +3,7 @@
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use std::fs;
 use std::path::PathBuf;
 
@@ -85,8 +86,7 @@ pub struct AppConfig {
 }
 
 /// Interface display modes
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum InterfaceMode {
     #[default]
     List,
@@ -94,6 +94,27 @@ pub enum InterfaceMode {
     Banners,
 }
 
+impl InterfaceMode {
+    pub const ALL: [InterfaceMode; 3] = [
+        InterfaceMode::List,
+        InterfaceMode::Blocks,
+        InterfaceMode::Banners,
+    ];
+}
+
+impl fmt::Display for InterfaceMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                InterfaceMode::List => "List",
+                InterfaceMode::Blocks => "Grid",
+                InterfaceMode::Banners => "Banner",
+            }
+        )
+    }
+}
 
 impl Default for AppConfig {
     fn default() -> Self {
