@@ -101,6 +101,10 @@ pub enum AddGameMessage {
     OpenProtonfixUrl,
     /// Lossless Scaling button clicked
     LosslessClicked,
+    /// Winetricks button clicked
+    WinetricksClicked,
+    /// Winecfg button clicked
+    WinecfgClicked,
     /// Confirm dialog
     Confirm,
     /// Cancel dialog
@@ -361,6 +365,10 @@ impl AddGameDialog {
             AddGameMessage::LosslessClicked => {
                 self.showing_lossless = !self.showing_lossless;
             }
+            AddGameMessage::WinetricksClicked | AddGameMessage::WinecfgClicked => {
+                // These will be handled by the parent (main.rs)
+                return Task::done(message);
+            }
             AddGameMessage::Confirm => {
                 if self.validate() {
                     return Task::done(AddGameMessage::Confirm);
@@ -540,6 +548,7 @@ impl AddGameDialog {
         let protonfix_section = self.view_protonfix_section(i18n);
         let arguments_section = self.view_arguments_section(i18n);
         let options_section = self.view_options_section(i18n);
+        let tools_section = self.view_tools_section(i18n);
         let shortcuts_section = self.view_shortcuts_section(i18n);
         let buttons_section = self.view_buttons(i18n);
 
@@ -559,6 +568,8 @@ impl AddGameDialog {
             arguments_section,
             Space::with_height(Length::Fixed(10.0)),
             options_section,
+            Space::with_height(Length::Fixed(10.0)),
+            tools_section,
             Space::with_height(Length::Fixed(10.0)),
             shortcuts_section,
         ])
@@ -708,6 +719,22 @@ impl AddGameDialog {
             row![button(text(i18n.t("Lossless Scaling Frame Generation")))
                 .on_press(AddGameMessage::LosslessClicked),]
             .padding(5),
+        ]
+        .spacing(5)
+        .into()
+    }
+
+    /// View the tools section
+    fn view_tools_section(&self, i18n: &I18n) -> Element<'_, AddGameMessage> {
+        column![
+            text(i18n.t("Tools")).size(14),
+            Space::with_height(Length::Fixed(5.0)),
+            row![
+                button(text("Winecfg").size(14)).on_press(AddGameMessage::WinecfgClicked),
+                Space::with_width(Length::Fixed(10.0)),
+                button(text("Winetricks").size(14)).on_press(AddGameMessage::WinetricksClicked),
+            ]
+            .spacing(10),
         ]
         .spacing(5)
         .into()

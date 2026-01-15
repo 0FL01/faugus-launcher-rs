@@ -33,6 +33,8 @@ use shortcuts::ShortcutLocation;
 use steam::SteamShortcuts;
 use tray::{SystemTray, TrayConfig, TrayEvent};
 
+use launcher::wine_tools;
+
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Application messages
@@ -378,6 +380,25 @@ impl FaugusLauncher {
                                 }
                             }
                             AddGameMessage::Cancel => true,
+                            AddGameMessage::WinetricksClicked => {
+                                let prefix = dialog.get_game().prefix;
+                                let runner = dialog.get_game().runner;
+                                if let Err(e) = wine_tools::run_winetricks(&prefix, &runner) {
+                                    error!("Failed to run Winetricks: {}", e);
+                                }
+                                false
+                            }
+                            AddGameMessage::WinecfgClicked => {
+                                let game = dialog.get_game();
+                                if let Err(e) = wine_tools::run_winecfg(
+                                    &game.prefix,
+                                    &game.runner,
+                                    Some(&game.gameid),
+                                ) {
+                                    error!("Failed to run Winecfg: {}", e);
+                                }
+                                false
+                            }
                             _ => {
                                 return dialog.update(msg.clone()).map(Message::AddGameDialog);
                             }
@@ -422,6 +443,27 @@ impl FaugusLauncher {
                             SettingsMessage::ProtonManagerClicked => {
                                 // Open the proton manager dialog
                                 return Task::done(Message::ShowProtonManagerDialog);
+                            }
+                            SettingsMessage::WinetricksClicked => {
+                                let config = dialog.get_config();
+                                if let Err(e) = wine_tools::run_winetricks(
+                                    &config.default_prefix,
+                                    &config.default_runner,
+                                ) {
+                                    error!("Failed to run Winetricks: {}", e);
+                                }
+                                false
+                            }
+                            SettingsMessage::WinecfgClicked => {
+                                let config = dialog.get_config();
+                                if let Err(e) = wine_tools::run_winecfg(
+                                    &config.default_prefix,
+                                    &config.default_runner,
+                                    None,
+                                ) {
+                                    error!("Failed to run Winecfg: {}", e);
+                                }
+                                false
                             }
                             _ => {
                                 return dialog.update(msg.clone()).map(Message::SettingsDialog);
