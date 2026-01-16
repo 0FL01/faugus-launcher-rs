@@ -25,19 +25,15 @@ jobs:
             rpm \
             zstd \
             libarchive-tools \
-            bsdtar \
             jq \
             build-essential \
             pkg-config \
-            libgtk-3-dev
+            libgtk-3-dev \
+            fakeroot
           sudo gem install --no-document fpm
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Cache cargo
         uses: actions/cache@v4
