@@ -51,11 +51,36 @@ jobs:
         run: |
           VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          
+          # Binary
           mkdir -p dist/root/usr/bin
-          mkdir -p dist/root/usr/share/faugus-launcher/assets
           cp target/release/${BIN_NAME} dist/root/usr/bin/
-          cp -r assets/* dist/root/usr/share/faugus-launcher/assets/
           chmod 755 dist/root/usr/bin/${BIN_NAME}
+          
+          # Assets
+          mkdir -p dist/root/usr/share/faugus-launcher/assets
+          cp -r assets/* dist/root/usr/share/faugus-launcher/assets/
+          
+          # Desktop Entry
+          mkdir -p dist/root/usr/share/applications
+          cat > dist/root/usr/share/applications/faugus-launcher-rs.desktop <<EOF
+          [Desktop Entry]
+          Categories=Game;Utility;
+          Comment=Lightweight launcher for Windows games on Linux using UMU-Launcher
+          Exec=${BIN_NAME} %f
+          Icon=faugus-launcher
+          MimeType=application/x-ms-dos-executable;application/x-msi;application/x-ms-shortcut;application/x-bat;text/x-ms-regedit
+          Name=Faugus Launcher (Rust)
+          Terminal=false
+          Type=Application
+          StartupNotify=true
+          EOF
+          
+          # Icons
+          mkdir -p dist/root/usr/share/icons/hicolor/512x512/apps
+          mkdir -p dist/root/usr/share/icons/hicolor/scalable/apps
+          cp assets/faugus-launcher.png dist/root/usr/share/icons/hicolor/512x512/apps/faugus-launcher.png
+          cp assets/faugus-mono.svg dist/root/usr/share/icons/hicolor/scalable/apps/faugus-launcher.svg
 
       - name: Package Debian (.deb)
         run: |
