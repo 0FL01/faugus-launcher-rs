@@ -1,8 +1,43 @@
-# Faugus Launcher
+# Faugus Launcher (Rust Fork)
 
-A simple and lightweight app for running Windows games using [UMU-Launcher](https://github.com/Open-Wine-Components/umu-launcher)
+This is an **experimental Rust rewrite** of Faugus Launcher using the [Iced](https://github.com/iced-rs/iced) GUI framework.  
+The original Python (GTK3) version is available in the `legacy` branch.
 
-> **Note:** This is the **Rust rewrite** of Faugus Launcher. The original Python (GTK3) version is available in the `legacy` branch.
+## Status
+
+- **Completion**: ~75-80% (January 2026)
+- **Target**: Feature parity with Python version 1.13.5
+- **Stability**: Functional, but may have bugs
+
+## Quick Start
+
+### Build from source
+
+#### Requirements
+- Rust 1.75 or later
+- Cargo
+
+#### Build binary
+```bash
+cargo build --release
+```
+
+Binary location: `target/release/faugus-launcher-rs`
+
+#### Run
+```bash
+./target/release/faugus-launcher-rs
+```
+
+### Install system-wide (optional)
+```bash
+sudo cp target/release/faugus-launcher-rs /usr/local/bin/faugus-launcher
+```
+
+---
+
+<details>
+<summary><b>📦 Installation & Usage (Original Python Version)</b></summary>
 
 ### Support the project
 <a href='https://ko-fi.com/K3K210EMDU' target='_blank'><img src=https://github.com/Faugus/faugus-launcher/blob/main/assets/ko-fi.png width="155" height="35"/></a>&nbsp;&nbsp;
@@ -76,7 +111,7 @@ Allow Steam to run Faugus Launcher's shortcuts:
 ```
 sudo flatpak override com.valvesoftware.Steam --talk-name=org.freedesktop.Flatpak
 ```
-Allow Steam to see the game's icon:
+Allow Steam to see game's icon:
 ```
 sudo flatpak override com.valvesoftware.Steam --filesystem=~/.var/app/io.github.Faugus.faugus-launcher/config/faugus-launcher/
 ```
@@ -85,25 +120,6 @@ sudo flatpak override com.valvesoftware.Steam --filesystem=~/.var/app/io.github.
 - The 'stop' button won't close games/apps
 - Gamescope doesn't work
 - It may not use the system theme in some DEs
-
-## Build from source
-
-### Requirements
-- Rust 1.75 or later
-- Cargo
-- System libraries (on Debian/Ubuntu): `libssl-dev pkg-config libatk1.0-dev libgtk-3-dev libpango1.0-dev libgdk-pixbuf-2.0-dev libx11-dev`
-
-### Building
-```bash
-cargo build --release
-```
-
-The binary will be located at `target/release/faugus-launcher-rs`.
-
-### Installing (optional)
-```bash
-sudo cp target/release/faugus-launcher-rs /usr/local/bin/faugus-launcher
-```
 
 # Usage
 [![YouTube](http://i.ytimg.com/vi/Ay6C2f55Pc8/hqdefault.jpg)](https://www.youtube.com/watch?v=Ay6C2f55Pc8)
@@ -129,7 +145,32 @@ For Application Launchers
 ~/.local/share/applications/
 ```
 
-# Technology Stack (Rust Version)
+# Screenshots
+### Main window
+<img src=screenshots/main-list.png/><br><br>
+<img src=screenshots/main-blocks.png/><br><br>
+<img src=screenshots/main-banners.png/><br>
+
+### Add/Edit game
+<img src=screenshots/add-main.png/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src=screenshots/add-tools.png/><br>
+
+### Settings
+<img src=screenshots/settings.png/><br>
+
+### Proton Manager
+<img src=screenshots/proton-manager.png/><br>
+
+### Create shortcut from .exe file
+<img src=screenshots/shortcut-file.png/><br>
+
+</details>
+
+---
+
+<details>
+<summary><b>🛠️ Development</b></summary>
+
+## Technology Stack (Rust Version)
 - **GUI Framework**: [Iced](https://github.com/iced-rs/iced) 0.13
 - **Runtime**: [Tokio](https://tokio.rs/) async runtime
 - **System Integration**:
@@ -138,8 +179,6 @@ For Application Launchers
   - System tray: [tray-icon](https://github.com/tauri-apps/tray-icon)
 - **Networking**: [reqwest](https://github.com/seanmonstar/reqwest) with rustls-tls
 - **Configuration**: [serde](https://serde.rs/) for JSON/VDF
-
-# Development
 
 ## Project Structure
 ```
@@ -166,20 +205,4 @@ cargo clippy
 cargo fmt
 ```
 
-# Screenshots
-### Main window
-<img src=screenshots/main-list.png/><br><br>
-<img src=screenshots/main-blocks.png/><br><br>
-<img src=screenshots/main-banners.png/><br>
-
-### Add/Edit game
-<img src=screenshots/add-main.png/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src=screenshots/add-tools.png/><br>
-
-### Settings
-<img src=screenshots/settings.png/><br>
-
-### Proton Manager
-<img src=screenshots/proton-manager.png/><br>
-
-### Create shortcut from .exe file
-<img src=screenshots/shortcut-file.png/><br>
+</details>
