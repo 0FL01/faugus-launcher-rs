@@ -259,47 +259,68 @@ impl MainWindow {
                 }
             }
             Message::DeleteClicked => {
-                if let Some(index) = self.selected_game_index {
-                    if let Some(game) = self.games.get(index).cloned() {
-                        info!("Delete game: {}", game.title);
+                // DeleteClicked is now handled in main.rs to show confirmation dialog
+                Task::none()
+            }
+            Message::DeleteConfirmed(index, remove_prefix) => {
+                if let Some(game) = self.games.get(index).cloned() {
+                    info!(
+                        "Deleting game: {} (remove_prefix: {})",
+                        game.title, remove_prefix
+                    );
 
-                        // Delete game from storage
-                        if let Err(e) = game.delete() {
-                            error!("Failed to delete game: {}", e);
-                        } else {
-                            // Remove from Steam shortcuts if present
-                            if let Ok(mut shortcuts) = SteamShortcuts::load() {
-                                if shortcuts.contains(&game.title) {
-                                    if let Err(e) = shortcuts.remove(&game.title) {
-                                        error!("Failed to remove Steam shortcut: {}", e);
-                                    } else if let Err(e) = shortcuts.save() {
-                                        error!("Failed to save Steam shortcuts: {}", e);
-                                    } else {
-                                        info!("Steam shortcut removed for: {}", game.title);
-                                    }
+                    // Delete game from storage
+                    if let Err(e) = game.delete() {
+                        error!("Failed to delete game: {}", e);
+                    } else {
+                        // Remove prefix folder if requested
+                        if remove_prefix {
+                            let prefix_path = &game.prefix;
+                            let default_prefix = crate::config::paths::Paths::default_prefix();
+                            // SAFETY: Never delete "default" prefix or the shared default prefix
+                            if prefix_path != &default_prefix
+                                && prefix_path.to_string_lossy() != "default"
+                                && prefix_path.exists()
+                            {
+                                info!("Removing prefix folder: {:?}", prefix_path);
+                                if let Err(e) = std::fs::remove_dir_all(prefix_path) {
+                                    error!("Failed to remove prefix folder: {}", e);
                                 }
                             }
-
-                            // Remove desktop shortcuts if present
-                            if DesktopShortcutManager::exists(&game) {
-                                if let Err(e) = DesktopShortcutManager::remove(&game) {
-                                    error!("Failed to remove desktop shortcuts: {}", e);
-                                } else {
-                                    info!("Desktop shortcuts removed for: {}", game.title);
-                                }
-                            }
-
-                            // Remove icon if present
-                            if let Err(e) = IconManager::delete_icon(&game.gameid) {
-                                error!("Failed to remove icon: {}", e);
-                            }
-
-                            // Reload games list
-                            self.reload_games();
-
-                            // Clear selection
-                            self.selected_game_index = None;
                         }
+
+                        // Remove from Steam shortcuts if present
+                        if let Ok(mut shortcuts) = SteamShortcuts::load() {
+                            if shortcuts.contains(&game.title) {
+                                if let Err(e) = shortcuts.remove(&game.title) {
+                                    error!("Failed to remove Steam shortcut: {}", e);
+                                } else if let Err(e) = shortcuts.save() {
+                                    error!("Failed to save Steam shortcuts: {}", e);
+                                } else {
+                                    info!("Steam shortcut removed for: {}", game.title);
+                                }
+                            }
+                        }
+
+                        // Remove desktop shortcuts if present
+                        if DesktopShortcutManager::exists(&game) {
+                            if let Err(e) = DesktopShortcutManager::remove(&game) {
+                                error!("Failed to remove desktop shortcuts: {}", e);
+                            } else {
+                                info!("Desktop shortcuts removed for: {}", game.title);
+                            }
+                        }
+
+                        // Remove icon if present
+                        if let Err(e) = IconManager::delete_icon(&game.gameid) {
+                            error!("Failed to remove icon: {}", e);
+                        }
+
+                        // Reload games list
+                        self.reload_games();
+
+                        // Clear selection
+                        self.selected_game_index = None;
                     }
                 }
                 Task::none()

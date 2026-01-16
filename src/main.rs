@@ -48,7 +48,7 @@ pub enum Message {
     AddClicked,
     EditClicked,
     DeleteClicked,
-    DeleteConfirmed(usize),
+    DeleteConfirmed(usize, bool),
     HideShowClicked,
     DuplicateClicked,
     KillProcessClicked,
@@ -84,6 +84,7 @@ pub enum Message {
     // Confirmation Dialog
     ShowConfirmationDialog(Box<ConfirmationDialog>),
     ConfirmationDialogClosed(bool),
+    ToggleRemovePrefix,
     // Context Menu
     GameRightClicked(usize),
     ContextMenu(ContextMenuMessage),
@@ -215,17 +216,29 @@ impl FaugusLauncher {
                 Task::none()
             }
             Message::ConfirmationDialogClosed(confirmed) => {
+                let remove_prefix = if let DialogState::Confirmation(dialog) = &self.dialog {
+                    dialog.remove_prefix
+                } else {
+                    false
+                };
+
                 self.dialog = DialogState::None;
 
                 // Handle confirmation result
                 if let Some(index) = self.pending_delete_index {
                     if confirmed {
                         // User confirmed, proceed with deletion
-                        return Task::done(Message::DeleteConfirmed(index));
+                        return Task::done(Message::DeleteConfirmed(index, remove_prefix));
                     } else {
                         // User cancelled, clear pending state
                         self.pending_delete_index = None;
                     }
+                }
+                Task::none()
+            }
+            Message::ToggleRemovePrefix => {
+                if let DialogState::Confirmation(dialog) = &mut self.dialog {
+                    dialog.remove_prefix = !dialog.remove_prefix;
                 }
                 Task::none()
             }
@@ -237,6 +250,7 @@ impl FaugusLauncher {
 
                         let dialog = ConfirmationDialog::delete_confirmation(
                             game.title.clone(),
+                            &game.prefix,
                             Message::ConfirmationDialogClosed(true),
                             Message::ConfirmationDialogClosed(false),
                         );
@@ -246,10 +260,11 @@ impl FaugusLauncher {
                 }
                 Task::none()
             }
-            Message::DeleteConfirmed(index) => {
+            Message::DeleteConfirmed(index, remove_prefix) => {
                 self.pending_delete_index = None;
                 // Pass through to main_window for actual deletion
-                self.main_window.update(Message::DeleteConfirmed(index))
+                self.main_window
+                    .update(Message::DeleteConfirmed(index, remove_prefix))
             }
             Message::CloseDialog
             | Message::CloseAddGameDialog
