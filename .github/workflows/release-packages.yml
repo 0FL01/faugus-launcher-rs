@@ -81,29 +81,14 @@ jobs:
 
       - name: Package Arch (.pkg.tar.zst)
         run: |
-          mkdir -p dist/arch/src
-          mkdir -p dist/arch/pkg
-          mkdir -p dist/arch/faugus-launcher-rs/usr/bin
-          mkdir -p dist/arch/faugus-launcher-rs/usr/share/faugus-launcher/assets
-          cp target/release/${BIN_NAME} dist/arch/faugus-launcher-rs/usr/bin/
-          cp -r assets/* dist/arch/faugus-launcher-rs/usr/share/faugus-launcher/assets/
-          cp -r dist/arch/faugus-launcher-rs/* dist/arch/pkg/
-          pushd dist/arch > /dev/null
-          cat > PKGBUILD <<EOF
-          pkgname=faugus-launcher-rs
-          pkgver=${VERSION}
-          pkgrel=1
-          pkgdesc="Faugus Launcher (Rust)"
-          arch=(x86_64)
-          license=(MIT)
-          depends=()
-
-          package() {
-            cp -r "${srcdir}/pkg"/* "${pkgdir}/"
-          }
-          EOF
-          makepkg --force --noextract --nodeps --nocheck
-          popd > /dev/null
+          fpm -s dir -t pacman \
+            -n ${APP_NAME} \
+            -v ${VERSION} \
+            -C dist/root \
+            --description "Faugus Launcher (Rust)" \
+            --license MIT \
+            --maintainer "@0FL01" \
+            --architecture x86_64
 
       - name: Package universal tarball (.tar.zst)
         run: |
@@ -114,7 +99,7 @@ jobs:
           mkdir -p dist/out
           mv *.deb dist/out/ || true
           mv *.rpm dist/out/ || true
-          mv dist/arch/*.pkg.tar.zst dist/out/ || true
+          mv *.pkg.tar.zst dist/out/ || true
           mv ${APP_NAME}-${VERSION}-linux-x86_64.tar.zst dist/out/ || true
 
       - name: Upload artifacts
