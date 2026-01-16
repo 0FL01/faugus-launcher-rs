@@ -1,7 +1,9 @@
 // Settings Dialog
 // Configuration dialog for Faugus Launcher
 
-use iced::widget::{button, checkbox, column, pick_list, row, scrollable, text, text_input, Space};
+use iced::widget::{
+    button, checkbox, column, container, pick_list, row, scrollable, text, text_input, Space,
+};
 use iced::{Element, Length, Task};
 use std::fmt;
 use std::path::PathBuf;
@@ -448,15 +450,20 @@ impl SettingsDialog {
             actions_section,
             restart_notice,
         ])
-        .width(Length::Fill);
+        .width(Length::Fill)
+        .height(Length::FillPortion(1));
 
-        column![
+        let content = column![
             scrollable,
             Space::with_height(Length::Fixed(10.0)),
             buttons_section
         ]
-        .spacing(10)
-        .into()
+        .spacing(10);
+
+        container(content)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .into()
     }
 
     /// View general settings section

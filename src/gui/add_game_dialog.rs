@@ -592,7 +592,8 @@ impl AddGameDialog {
             Space::with_height(Length::Fixed(10.0)),
             shortcuts_section,
         ])
-        .width(Length::Fill);
+        .width(Length::Fill)
+        .height(Length::FillPortion(1));
 
         column![
             scrollable,

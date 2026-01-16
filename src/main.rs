@@ -12,7 +12,7 @@ mod steam;
 mod tray;
 mod utils;
 
-use iced::widget::{container, mouse_area, stack};
+use iced::widget::{container, mouse_area, stack, Space};
 use iced::{window, Color, Element, Length, Padding, Point, Size, Task};
 use tracing::{error, info, warn};
 
@@ -89,6 +89,8 @@ pub enum Message {
     ContextMenu(ContextMenuMessage),
     CloseContextMenu,
     MouseMoved(Point),
+    CloseDialog,
+    NoOp,
 }
 
 use gui::DialogState;
@@ -244,7 +246,8 @@ impl FaugusLauncher {
                 // Pass through to main_window for actual deletion
                 self.main_window.update(Message::DeleteConfirmed(index))
             }
-            Message::CloseAddGameDialog
+            Message::CloseDialog
+            | Message::CloseAddGameDialog
             | Message::CloseSettingsDialog
             | Message::CloseLogViewerDialog
             | Message::CloseProtonManagerDialog
@@ -252,6 +255,7 @@ impl FaugusLauncher {
                 self.dialog = DialogState::None;
                 Task::none()
             }
+            Message::NoOp => Task::none(),
             Message::MouseMoved(position) => {
                 self.mouse_position = position;
                 Task::none()
@@ -702,6 +706,7 @@ impl FaugusLauncher {
                     .map(Message::AddGameDialog),
             )
             .width(Length::Fixed(600.0))
+            .max_height(700.0)
             .padding(20)
             .style(container::bordered_box)
             .into(),
@@ -712,6 +717,7 @@ impl FaugusLauncher {
                     .map(Message::SettingsDialog),
             )
             .width(Length::Fixed(700.0))
+            .max_height(700.0)
             .padding(20)
             .style(container::bordered_box)
             .into(),
@@ -722,6 +728,7 @@ impl FaugusLauncher {
                     .map(Message::LogViewerDialog),
             )
             .width(Length::Fixed(900.0))
+            .max_height(700.0)
             .padding(20)
             .style(container::bordered_box)
             .into(),
@@ -732,6 +739,7 @@ impl FaugusLauncher {
                     .map(Message::ProtonManagerDialog),
             )
             .width(Length::Fixed(800.0))
+            .max_height(700.0)
             .padding(20)
             .style(container::bordered_box)
             .into(),
@@ -739,15 +747,22 @@ impl FaugusLauncher {
             DialogState::Confirmation(dialog) => dialog.view(self.main_window.i18n()),
         };
 
-        let modal = container(dialog_content)
-            .width(Length::Fill)
-            .height(Length::Fill)
-            .center_x(Length::Fill)
-            .center_y(Length::Fill)
-            .style(|_theme| container::Style {
+        let backdrop = mouse_area(container(Space::new(Length::Fill, Length::Fill)).style(
+            |_theme| container::Style {
                 background: Some(Color::from_rgba(0.0, 0.0, 0.0, 0.8).into()),
                 ..Default::default()
-            });
+            },
+        ))
+        .on_press(Message::CloseDialog);
+
+        let modal = stack![
+            backdrop,
+            container(mouse_area(dialog_content).on_press(Message::NoOp))
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .center_x(Length::Fill)
+                .center_y(Length::Fill)
+        ];
 
         stack![main_content, modal].into()
     }
