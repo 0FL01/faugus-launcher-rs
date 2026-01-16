@@ -14,16 +14,16 @@ pub struct TrayIcon {
 
 impl TrayIcon {
     /// Create a new tray icon manager
-    pub fn new(custom_path: Option<PathBuf>) -> Result<Self> {
+    pub fn new(custom_path: Option<PathBuf>, is_mono: bool) -> Result<Self> {
         let icon_path = if let Some(path) = custom_path {
             if path.exists() {
                 path
             } else {
                 warn!("Custom tray icon not found: {:?}, using default", path);
-                Self::find_default_icon()?
+                Self::find_default_icon(is_mono)?
             }
         } else {
-            Self::find_default_icon()?
+            Self::find_default_icon(is_mono)?
         };
 
         info!("Using tray icon: {:?}", icon_path);
@@ -37,42 +37,9 @@ impl TrayIcon {
     }
 
     /// Find the default Faugus Launcher icon
-    fn find_default_icon() -> Result<PathBuf> {
-        // Try system icons first
-        let icon = Paths::get_icon("faugus-launcher.png");
-        if icon.exists() {
+    fn find_default_icon(is_mono: bool) -> Result<PathBuf> {
+        if let Some(icon) = Paths::get_app_icon(is_mono) {
             return Ok(icon);
-        }
-
-        // Try common installation paths
-        let possible_paths = vec![
-            PathBuf::from("/usr/share/icons/hicolor/256x256/apps/faugus-launcher.png"),
-            PathBuf::from("/usr/share/pixmaps/faugus-launcher.png"),
-            PathBuf::from("/usr/local/share/icons/hicolor/256x256/apps/faugus-launcher.png"),
-        ];
-
-        for path in possible_paths {
-            if path.exists() {
-                return Ok(path);
-            }
-        }
-
-        // Fallback to config icons directory
-        let config_icon = Paths::icons_dir().join("faugus-launcher.png");
-        if config_icon.exists() {
-            return Ok(config_icon);
-        }
-
-        // Last resort: use assets directory (for development)
-        let asset_paths = vec![
-            PathBuf::from("assets/faugus-launcher.png"),
-            PathBuf::from("../assets/faugus-launcher.png"),
-        ];
-
-        for path in asset_paths {
-            if path.exists() {
-                return Ok(path);
-            }
         }
 
         Err(anyhow::anyhow!("No suitable tray icon found"))

@@ -68,7 +68,10 @@ impl SystemTray {
         }
 
         // Load tray icon
-        self.icon = Some(TrayIcon::new(self.config.icon_path.clone())?);
+        self.icon = Some(TrayIcon::new(
+            self.config.icon_path.clone(),
+            self.config.is_mono,
+        )?);
 
         // Create menu
         self.menu = Some(TrayMenu::new(i18n)?);

@@ -1319,6 +1319,7 @@ dependencies = [
  "flate2",
  "fs2",
  "futures",
+ "gtk",
  "iced",
  "image 0.25.9",
  "keyvalues-serde",

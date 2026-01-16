@@ -138,6 +138,7 @@ impl FaugusLauncher {
                 start_minimized: config.start_boot,
                 close_to_tray: config.close_on_launch,
                 show_notifications: true,
+                is_mono: config.mono_icon,
                 icon_path: None,
             });
 
@@ -823,6 +824,17 @@ impl FaugusLauncher {
 }
 
 fn main() -> iced::Result {
+    #[cfg(target_os = "linux")]
+    {
+        if let Err(e) = gtk::init() {
+            eprintln!("Failed to initialize GTK: {}", e);
+        }
+    }
+
+    // Load application icon
+    let app_icon = config::paths::Paths::get_app_icon(false)
+        .and_then(|path| iced::window::icon::from_file(path).ok());
+
     iced::application(
         "Faugus Launcher",
         FaugusLauncher::update,
@@ -831,6 +843,7 @@ fn main() -> iced::Result {
     .subscription(FaugusLauncher::subscription)
     .window(window::Settings {
         size: Size::new(1200.0, 800.0),
+        icon: app_icon,
         ..Default::default()
     })
     .run_with(FaugusLauncher::new)

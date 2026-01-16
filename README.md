@@ -5,7 +5,8 @@ The original Python (GTK3) version is available in the `legacy` branch.
 
 ## Status
 
-- **Completion**: ~75-80% (January 2026)
+- **Completion**: 60-70% (January 2026)
+- **Status**: Core functionality is working and stable. Unused code (warnings) is intentionally left for the implementation of future features.
 - **Target**: Feature parity with Python version 1.13.5
 - **Stability**: Functional, but may have bugs
 

@@ -20,6 +20,8 @@ pub struct TrayConfig {
     pub close_to_tray: bool,
     /// Show notifications
     pub show_notifications: bool,
+    /// Use monochrome icon
+    pub is_mono: bool,
     /// Custom icon path (optional)
     pub icon_path: Option<PathBuf>,
 }
@@ -31,6 +33,7 @@ impl Default for TrayConfig {
             start_minimized: false,
             close_to_tray: false,
             show_notifications: true,
+            is_mono: false,
             icon_path: None,
         }
     }

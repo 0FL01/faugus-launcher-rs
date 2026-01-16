@@ -99,11 +99,47 @@ impl Paths {
         // Check system icons
         let system_icons = Self::system_data(&format!("icons/{}", icon_name));
         if let Some(path) = system_icons {
-            return path;
+            if path.exists() {
+                return path;
+            }
+        }
+
+        // Check pixmaps
+        let pixmap_path = PathBuf::from("/usr/share/pixmaps").join(icon_name);
+        if pixmap_path.exists() {
+            return pixmap_path;
+        }
+
+        // Check assets directory (for development)
+        let asset_paths = vec![
+            PathBuf::from("assets").join(icon_name),
+            PathBuf::from("../assets").join(icon_name),
+        ];
+
+        for path in asset_paths {
+            if path.exists() {
+                return path;
+            }
         }
 
         // Fallback
         PathBuf::from(icon_name)
+    }
+
+    /// Get application icon path (for window icon)
+    pub fn get_app_icon(is_mono: bool) -> Option<PathBuf> {
+        let icon_name = if is_mono {
+            "faugus-mono.png"
+        } else {
+            "faugus-launcher.png"
+        };
+
+        let path = Self::get_icon(icon_name);
+        if path.exists() {
+            Some(path)
+        } else {
+            None
+        }
     }
 
     /// Application-specific paths
