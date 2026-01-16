@@ -1,0 +1,128 @@
+name: Build Packages
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    env:
+      CARGO_TERM_COLOR: always
+      APP_NAME: faugus-launcher-rs
+      BIN_NAME: faugus-launcher-rs
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ruby \
+            ruby-dev \
+            rpm \
+            zstd \
+            libarchive-tools \
+            bsdtar \
+            jq \
+            build-essential \
+            pkg-config \
+            libgtk-3-dev
+          sudo gem install --no-document fpm
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Prepare staging
+        run: |
+          VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          mkdir -p dist/root/usr/bin
+          mkdir -p dist/root/usr/share/faugus-launcher/assets
+          cp target/release/${BIN_NAME} dist/root/usr/bin/
+          cp -r assets/* dist/root/usr/share/faugus-launcher/assets/
+          chmod 755 dist/root/usr/bin/${BIN_NAME}
+
+      - name: Package Debian (.deb)
+        run: |
+          fpm -s dir -t deb \
+            -n ${APP_NAME} \
+            -v ${VERSION} \
+            -C dist/root \
+            --description "Faugus Launcher (Rust)" \
+            --license MIT \
+            --maintainer "@0FL01" \
+            --architecture amd64
+
+      - name: Package Fedora (.rpm)
+        run: |
+          fpm -s dir -t rpm \
+            -n ${APP_NAME} \
+            -v ${VERSION} \
+            -C dist/root \
+            --description "Faugus Launcher (Rust)" \
+            --license MIT \
+            --maintainer "@0FL01" \
+            --architecture x86_64
+
+      - name: Package Arch (.pkg.tar.zst)
+        run: |
+          mkdir -p dist/arch/src
+          mkdir -p dist/arch/pkg
+          mkdir -p dist/arch/faugus-launcher-rs/usr/bin
+          mkdir -p dist/arch/faugus-launcher-rs/usr/share/faugus-launcher/assets
+          cp target/release/${BIN_NAME} dist/arch/faugus-launcher-rs/usr/bin/
+          cp -r assets/* dist/arch/faugus-launcher-rs/usr/share/faugus-launcher/assets/
+          cp -r dist/arch/faugus-launcher-rs/* dist/arch/pkg/
+          pushd dist/arch > /dev/null
+          cat > PKGBUILD <<EOF
+          pkgname=faugus-launcher-rs
+          pkgver=${VERSION}
+          pkgrel=1
+          pkgdesc="Faugus Launcher (Rust)"
+          arch=(x86_64)
+          license=(MIT)
+          depends=()
+
+          package() {
+            cp -r "${srcdir}/pkg"/* "${pkgdir}/"
+          }
+          EOF
+          makepkg --force --noextract --nodeps --nocheck
+          popd > /dev/null
+
+      - name: Package universal tarball (.tar.zst)
+        run: |
+          tar --directory=dist/root -c . | zstd -19 -o ${APP_NAME}-${VERSION}-linux-x86_64.tar.zst
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p dist/out
+          mv *.deb dist/out/ || true
+          mv *.rpm dist/out/ || true
+          mv dist/arch/*.pkg.tar.zst dist/out/ || true
+          mv ${APP_NAME}-${VERSION}-linux-x86_64.tar.zst dist/out/ || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: faugus-launcher-packages
+          path: dist/out
