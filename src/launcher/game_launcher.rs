@@ -114,10 +114,6 @@ impl GameLauncher {
             if let Some(_mangohud) = Paths::mangohud() {
                 info!("Enabling MangoHud");
                 cmd.env("MANGOHUD", "1");
-                cmd.env(
-                    "MANGOHUD_CONFIG",
-                    "fps,frame_timing,cpu_stats,gpu_stats,ram,version",
-                );
             }
         }
 
