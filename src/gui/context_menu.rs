@@ -19,23 +19,15 @@ pub struct ContextMenu {
     pub game_index: usize,
     pub position: Point,
     pub game_title: String,
-    pub playtime_formatted: String,
     pub is_hidden: bool,
 }
 
 impl ContextMenu {
-    pub fn new(
-        game_index: usize,
-        position: Point,
-        game_title: String,
-        playtime_formatted: String,
-        is_hidden: bool,
-    ) -> Self {
+    pub fn new(game_index: usize, position: Point, game_title: String, is_hidden: bool) -> Self {
         Self {
             game_index,
             position,
             game_title,
-            playtime_formatted,
             is_hidden,
         }
     }
@@ -48,16 +40,7 @@ impl ContextMenu {
         };
 
         let content = column![
-            container(
-                column![
-                    text(&self.game_title).size(14),
-                    text(&self.playtime_formatted)
-                        .size(12)
-                        .style(text::secondary),
-                ]
-                .spacing(2)
-            )
-            .padding(8),
+            container(column![text(&self.game_title).size(14),].spacing(2)).padding(8),
             horizontal_rule(1),
             button(text(i18n.t("Play")))
                 .on_press(ContextMenuMessage::Play)

@@ -287,7 +287,6 @@ impl FaugusLauncher {
                         index,
                         self.mouse_position,
                         game.title.clone(),
-                        game.format_playtime(),
                         game.hidden,
                     );
                     self.dialog = DialogState::ContextMenu(Box::new(menu));

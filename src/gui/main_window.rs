@@ -479,15 +479,10 @@ impl MainWindow {
                     text(&game.title).size(16)
                 };
 
-                let game_row = row![
-                    icon,
-                    title_text,
-                    horizontal_space(),
-                    text(game.format_playtime()).size(12),
-                ]
-                .spacing(10)
-                .padding(10)
-                .align_y(Alignment::Center);
+                let game_row = row![icon, title_text, horizontal_space(),]
+                    .spacing(10)
+                    .padding(10)
+                    .align_y(Alignment::Center);
 
                 let container =
                     container(game_row)
@@ -554,7 +549,7 @@ impl MainWindow {
                         text(&game.title).size(14)
                     };
 
-                    let content = column![icon, title_text, text(game.format_playtime()).size(12),]
+                    let content = column![icon, title_text]
                         .spacing(5)
                         .align_x(Alignment::Center);
 
@@ -619,7 +614,7 @@ impl MainWindow {
                     text(&game.title).size(16)
                 };
 
-                let content = column![icon, title_text, text(game.format_playtime()).size(12),]
+                let content = column![icon, title_text]
                     .spacing(5)
                     .align_x(Alignment::Center);
 
