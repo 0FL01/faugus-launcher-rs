@@ -154,5 +154,4 @@ jobs:
           files: |
             dist/out/*.deb
             dist/out/*.rpm
-            dist/out/*.pkg.tar.zst
             dist/out/*.tar.zst
