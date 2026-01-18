@@ -9,6 +9,7 @@ pub mod log_viewer_dialog;
 pub mod main_window;
 pub mod proton_manager_dialog;
 pub mod settings_dialog;
+pub mod styles;
 
 use add_game_dialog::AddGameDialog;
 use confirmation_dialog::ConfirmationDialog;

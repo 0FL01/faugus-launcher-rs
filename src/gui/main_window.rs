@@ -11,12 +11,14 @@ use std::path::PathBuf;
 use tracing::{error, info};
 
 use crate::config::{AppConfig, Game, InterfaceMode};
+use crate::gui::styles::DeepSpace;
 use crate::icons::IconManager;
 use crate::launcher::{GameLaunchController, LaunchStatus};
 use crate::locale::I18n;
 use crate::shortcuts::DesktopShortcutManager;
 use crate::steam::SteamShortcuts;
 use crate::Message;
+use iced::ContentFit;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -391,10 +393,31 @@ impl MainWindow {
 
         let main_content = row![sidebar, content].spacing(10);
 
+        // Sidebar and Content layout
         let layout = container(column![header, main_content].spacing(10))
             .padding(20)
             .width(Length::Fill)
             .height(Length::Fill);
+
+        // Calculate background image handle
+        let bg_path = std::path::Path::new("assets/images/background.png");
+
+        let bg_handle = match std::fs::read(bg_path) {
+            Ok(bytes) => iced::widget::image::Handle::from_bytes(bytes),
+            Err(e) => {
+                error!("Failed to read background image: {}", e);
+                iced::widget::image::Handle::from_path(bg_path)
+            }
+        };
+
+        // Main Stack with Background
+        let root = iced::widget::stack![
+            image(bg_handle)
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .content_fit(ContentFit::Cover),
+            layout
+        ];
 
         if let Some(error) = &self.show_error_dialog {
             let error_modal = container(
@@ -413,20 +436,20 @@ impl MainWindow {
             .style(iced::widget::container::bordered_box);
 
             iced::widget::stack![
-                layout,
+                root,
                 container(error_modal)
                     .width(Length::Fill)
                     .height(Length::Fill)
                     .center_x(Length::Fill)
                     .center_y(Length::Fill)
                     .style(|_theme| iced::widget::container::Style {
-                        background: Some(iced::Color::from_rgba(0.0, 0.0, 0.0, 0.5).into()),
+                        background: Some(iced::Color::from_rgba(0.0, 0.0, 0.0, 0.7).into()), // Darker overlay for modal
                         ..Default::default()
                     })
             ]
             .into()
         } else {
-            layout.into()
+            root.into()
         }
     }
 
@@ -489,9 +512,9 @@ impl MainWindow {
                         .padding(10)
                         .width(Length::Fill)
                         .style(if is_selected {
-                            iced::widget::container::bordered_box
+                            DeepSpace::container
                         } else {
-                            iced::widget::container::transparent
+                            DeepSpace::transparent_container
                         });
 
                 // Wrap in mouse_area for click handling
@@ -555,9 +578,9 @@ impl MainWindow {
 
                     let container = container(content).padding(10).width(200).height(180).style(
                         if is_selected {
-                            iced::widget::container::bordered_box
+                            DeepSpace::container
                         } else {
-                            iced::widget::container::transparent
+                            DeepSpace::transparent_container
                         },
                     );
 
@@ -629,9 +652,9 @@ impl MainWindow {
                     .width(460)
                     .height(banner_height)
                     .style(if is_selected {
-                        iced::widget::container::bordered_box
+                        DeepSpace::container
                     } else {
-                        iced::widget::container::transparent
+                        DeepSpace::transparent_container
                     });
 
                 mouse_area(container)
@@ -651,7 +674,8 @@ impl MainWindow {
         let search = text_input(&self.i18n.t("Search games..."), &self.search_query)
             .on_input(Message::SearchChanged)
             .padding(10)
-            .width(Length::Fill);
+            .width(Length::Fill)
+            .style(DeepSpace::text_input);
 
         // Get selected game status
         let selected_status = self
@@ -683,29 +707,54 @@ impl MainWindow {
                 Message::PlayClicked
             })
             .padding(10)
-            .width(Length::Fill);
+            .width(Length::Fill)
+            .style(DeepSpace::button);
 
         let status_text = match selected_status {
-            LaunchStatus::Running(_) => text("Running").size(11),
-            LaunchStatus::Launching => text("Launching...").size(11),
-            LaunchStatus::Error(ref e) => text(format!("Error: {}", e)).size(11),
+            LaunchStatus::Running(_) => {
+                text("Running")
+                    .size(11)
+                    .style(|_| iced::widget::text::Style {
+                        color: Some(crate::gui::styles::colors::ACCENT),
+                        ..Default::default()
+                    })
+            }
+            LaunchStatus::Launching => {
+                text("Launching...")
+                    .size(11)
+                    .style(|_| iced::widget::text::Style {
+                        color: Some(crate::gui::styles::colors::ACCENT),
+                        ..Default::default()
+                    })
+            }
+            LaunchStatus::Error(ref e) => {
+                text(format!("Error: {}", e))
+                    .size(11)
+                    .style(|_| iced::widget::text::Style {
+                        color: Some(iced::Color::from_rgb(1.0, 0.3, 0.3)),
+                        ..Default::default()
+                    })
+            }
             LaunchStatus::NotRunning => text("").size(11),
         };
 
         let add_button = button(text(self.i18n.t("Add")))
             .on_press(Message::AddClicked)
             .padding(10)
-            .width(Length::Fill);
+            .width(Length::Fill)
+            .style(DeepSpace::menu_button);
 
         let settings_button = button(text(self.i18n.t("Settings")))
             .on_press(Message::SettingsClicked)
             .padding(10)
-            .width(Length::Fill);
+            .width(Length::Fill)
+            .style(DeepSpace::menu_button);
 
         let kill_all_button = button(text(self.i18n.t("Kill All")))
             .on_press(Message::KillAllProcesses)
             .padding(10)
-            .width(Length::Fill);
+            .width(Length::Fill)
+            .style(DeepSpace::menu_button);
 
         column![
             search,
