@@ -4,7 +4,7 @@
 use iced::widget::{
     button, checkbox, column, container, pick_list, row, scrollable, text, text_input, Space,
 };
-use iced::{Element, Length, Task};
+use iced::{Alignment, Element, Length, Padding, Task};
 use std::fmt;
 use std::path::PathBuf;
 
@@ -442,7 +442,13 @@ impl SettingsDialog {
             Space::with_height(Length::Fixed(20.0)),
             actions_section,
             restart_notice,
-        ])
+        ]
+        .padding(Padding {
+            top: 5.0,
+            right: 15.0,
+            bottom: 5.0,
+            left: 15.0,
+        }))
         .width(Length::Fill)
         .height(Length::FillPortion(1))
         .style(DeepSpace::scrollable);
@@ -457,6 +463,7 @@ impl SettingsDialog {
         container(content)
             .width(Length::Fill)
             .height(Length::Fill)
+            .padding(20) // Add padding to avoid rounded corners
             .style(DeepSpace::modal_container)
             .into()
     }

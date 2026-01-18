@@ -4,7 +4,7 @@
 use iced::widget::{
     button, checkbox, column, container, pick_list, row, scrollable, text, text_input, Space,
 };
-use iced::{Element, Length, Task};
+use iced::{Alignment, Element, Length, Padding, Task};
 use std::fmt;
 use std::path::PathBuf;
 
@@ -585,7 +585,13 @@ impl AddGameDialog {
             tools_section,
             Space::with_height(Length::Fixed(10.0)),
             shortcuts_section,
-        ])
+        ]
+        .padding(Padding {
+            top: 0.0,
+            right: 10.0,
+            bottom: 0.0,
+            left: 0.0,
+        }))
         .width(Length::Fill)
         .height(Length::FillPortion(1))
         .style(DeepSpace::scrollable);

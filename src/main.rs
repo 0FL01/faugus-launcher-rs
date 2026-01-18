@@ -769,7 +769,7 @@ impl FaugusLauncher {
                     .view(self.main_window.i18n())
                     .map(Message::SettingsDialog),
             )
-            .width(Length::Fixed(700.0))
+            .width(Length::Fixed(800.0))
             .max_height(700.0)
             .padding(20)
             .into(),
