@@ -18,7 +18,6 @@ use crate::locale::I18n;
 use crate::shortcuts::DesktopShortcutManager;
 use crate::steam::SteamShortcuts;
 use crate::Message;
-use iced::ContentFit;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -399,26 +398,6 @@ impl MainWindow {
             .width(Length::Fill)
             .height(Length::Fill);
 
-        // Calculate background image handle
-        let bg_path = std::path::Path::new("assets/images/background.png");
-
-        let bg_handle = match std::fs::read(bg_path) {
-            Ok(bytes) => iced::widget::image::Handle::from_bytes(bytes),
-            Err(e) => {
-                error!("Failed to read background image: {}", e);
-                iced::widget::image::Handle::from_path(bg_path)
-            }
-        };
-
-        // Main Stack with Background
-        let root = iced::widget::stack![
-            image(bg_handle)
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .content_fit(ContentFit::Cover),
-            layout
-        ];
-
         if let Some(error) = &self.show_error_dialog {
             let error_modal = container(
                 column![
@@ -436,7 +415,7 @@ impl MainWindow {
             .style(iced::widget::container::bordered_box);
 
             iced::widget::stack![
-                root,
+                layout,
                 container(error_modal)
                     .width(Length::Fill)
                     .height(Length::Fill)
@@ -449,7 +428,7 @@ impl MainWindow {
             ]
             .into()
         } else {
-            root.into()
+            layout.into()
         }
     }
 
