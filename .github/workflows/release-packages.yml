@@ -2,12 +2,22 @@ name: Build Packages
 
 on:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag (e.g., v1.0.0)'
+        required: true
+        type: string
+      create_release:
+        description: 'Create GitHub release'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build:
     runs-on: ubuntu-24.04
     permissions:
-      contents: read
+      contents: write
     env:
       CARGO_TERM_COLOR: always
       APP_NAME: faugus-launcher-rs
@@ -132,3 +142,17 @@ jobs:
         with:
           name: faugus-launcher-packages
           path: dist/out
+
+      - name: Create GitHub Release
+        if: ${{ inputs.create_release == true }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release_tag }}
+          name: Release ${{ inputs.release_tag }}
+          draft: false
+          prerelease: false
+          files: |
+            dist/out/*.deb
+            dist/out/*.rpm
+            dist/out/*.pkg.tar.zst
+            dist/out/*.tar.zst
