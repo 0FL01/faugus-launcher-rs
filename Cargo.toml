@@ -1,10 +1,14 @@
 [package]
-name = "faugus-launcher-rs"
+name = "faugus-launcher"
 version = "0.0.1"
 edition = "2021"
 license = "MIT"
 authors = ["@0FL01"]
-default-run = "faugus-launcher-rs"
+default-run = "faugus-launcher"
+
+[[bin]]
+name = "faugus-launcher"
+path = "src/main.rs"
 
 [[bin]]
 name = "faugus-run"

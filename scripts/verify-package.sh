@@ -1,5 +1,5 @@
 #!/bin/bash
-# verify-package.sh - Verify packaging includes both faugus-launcher-rs and faugus-run
+# verify-package.sh - Verify packaging includes both faugus-launcher and faugus-run
 # Usage: bash scripts/verify-package.sh
 
 set -euo pipefail
@@ -11,7 +11,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Binary names
-BIN_GUI="faugus-launcher-rs"
+BIN_GUI="faugus-launcher"
 BIN_CLI="faugus-run"
 
 # Paths
@@ -48,6 +48,8 @@ log_info "✓ Found ${BIN_CLI} ($(stat -c%s "${BUILD_DIR}/${BIN_CLI}") bytes)"
 # Step 2: Simulate package staging
 log_info ""
 log_info "Step 2: Simulating package staging (like CI workflow does)"
+# Clean staging directory first to avoid stale binaries
+rm -rf "${ARTIFACT_DIR}"
 mkdir -p "${STAGING_DIR}"
 cp "${BUILD_DIR}/${BIN_GUI}" "${STAGING_DIR}/"
 cp "${BUILD_DIR}/${BIN_CLI}" "${STAGING_DIR}/"
@@ -83,7 +85,7 @@ echo "  dpkg-deb -c faugus-launcher_*.deb"
 echo "  # RPM package:"
 echo "  rpm -qlp faugus-launcher-*.rpm"
 echo "  # Arch package:"
-echo "  tar -tzf faugus-launcher-*.pkg.tar.zst | grep -E '(faugus-launcher-rs|faugus-run)'"
+echo "  tar -tzf faugus-launcher-*.pkg.tar.zst | grep -E '(faugus-launcher|faugus-run)'"
 
 # Step 5: Validate faugus-run is included
 log_info ""
@@ -122,7 +124,7 @@ log_info ""
 log_info "Next steps for manual testing:"
 log_info "  1. Build packages: ./scripts/build-packages.sh"
 log_info "  2. Install package: sudo dpkg -i *.deb (or rpm/pacman equivalent)"
-log_info "  3. Verify install: ls -lh /usr/bin/faugus-launcher-rs /usr/bin/faugus-run"
+log_info "  3. Verify install: ls -lh /usr/bin/faugus-launcher /usr/bin/faugus-run"
 log_info "  4. Create Steam shortcut via launcher UI"
 log_info "  5. Check Exec line points to faugus-run"
 log_info "  6. Launch game from Steam and verify it works"
