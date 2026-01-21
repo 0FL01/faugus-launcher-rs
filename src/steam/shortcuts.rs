@@ -2,7 +2,6 @@
 // Handles reading, writing, and modifying Steam shortcuts.vdf
 
 use anyhow::{Context, Result};
-use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::fs;
 use std::path::PathBuf;
@@ -10,56 +9,6 @@ use tracing::{info, warn};
 
 use crate::config::paths::Paths;
 use crate::config::Game;
-
-/// Steam shortcut entry
-/// TODO: Use for Steam shortcut import/export feature
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SteamShortcut {
-    pub appid: u32,
-    pub appname: String,
-    pub exe: String,
-    pub start_dir: String,
-    pub icon: String,
-    pub shortcut_path: String,
-    pub launch_options: String,
-    pub is_hidden: u32,
-    pub allow_desktop_config: u32,
-    pub allow_overlay: u32,
-    pub open_vr: u32,
-    pub devkit: u32,
-    pub devkit_game_id: String,
-    pub devkit_override_appid: u32,
-    pub last_play_time: u64,
-    pub auto_close_shortcut: u32,
-    pub dip_treat_remote_desktop_as_sitting_in_front_of_monitor: u32,
-    pub fandom_tags: Vec<String>,
-}
-
-impl Default for SteamShortcut {
-    fn default() -> Self {
-        Self {
-            appid: 0,
-            appname: String::new(),
-            exe: String::new(),
-            start_dir: String::new(),
-            icon: String::new(),
-            shortcut_path: String::new(),
-            launch_options: String::new(),
-            is_hidden: 0,
-            allow_desktop_config: 1,
-            allow_overlay: 1,
-            open_vr: 0,
-            devkit: 0,
-            devkit_game_id: String::new(),
-            devkit_override_appid: 0,
-            last_play_time: 0,
-            auto_close_shortcut: 0,
-            dip_treat_remote_desktop_as_sitting_in_front_of_monitor: 0,
-            fandom_tags: Vec::new(),
-        }
-    }
-}
 
 /// Steam shortcuts manager
 pub struct SteamShortcuts {
@@ -278,118 +227,5 @@ impl SteamShortcuts {
     /// Check if a game is in Steam shortcuts
     pub fn contains(&self, title: &str) -> bool {
         self.find_shortcut(title).is_some()
-    }
-
-    /// Get all shortcuts
-    /// TODO: Use for Steam shortcut UI (import/export)
-    #[allow(dead_code)]
-    pub fn get_all(&self) -> Vec<SteamShortcut> {
-        let mut shortcuts = Vec::new();
-
-        for (_key, value) in &self.shortcuts {
-            if let Some(obj) = value.as_object() {
-                if let Ok(shortcut) = self.value_to_shortcut(obj) {
-                    shortcuts.push(shortcut);
-                }
-            }
-        }
-
-        shortcuts.sort_by(|a, b| a.appname.cmp(&b.appname));
-        shortcuts
-    }
-
-    /// Convert Value to SteamShortcut
-    /// TODO: Use for Steam shortcut UI (import/export)
-    #[allow(dead_code)]
-    fn value_to_shortcut(&self, obj: &Map<String, Value>) -> Result<SteamShortcut> {
-        Ok(SteamShortcut {
-            appid: obj.get("appid").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
-            appname: obj
-                .get("AppName")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string(),
-            exe: obj
-                .get("Exe")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string(),
-            start_dir: obj
-                .get("StartDir")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string(),
-            icon: obj
-                .get("icon")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string(),
-            shortcut_path: obj
-                .get("ShortcutPath")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string(),
-            launch_options: obj
-                .get("LaunchOptions")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string(),
-            is_hidden: obj.get("IsHidden").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
-            allow_desktop_config: obj
-                .get("AllowDesktopConfig")
-                .and_then(|v| v.as_u64())
-                .unwrap_or(0) as u32,
-            allow_overlay: obj
-                .get("AllowOverlay")
-                .and_then(|v| v.as_u64())
-                .unwrap_or(0) as u32,
-            open_vr: obj.get("OpenVR").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
-            devkit: obj.get("Devkit").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
-            devkit_game_id: obj
-                .get("DevkitGameID")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string(),
-            devkit_override_appid: obj
-                .get("DevkitOverrideAppID")
-                .and_then(|v| v.as_u64())
-                .unwrap_or(0) as u32,
-            last_play_time: obj
-                .get("LastPlayTime")
-                .and_then(|v| v.as_u64())
-                .unwrap_or(0),
-            auto_close_shortcut: obj
-                .get("AutoCloseShortcut")
-                .and_then(|v| v.as_u64())
-                .unwrap_or(0) as u32,
-            dip_treat_remote_desktop_as_sitting_in_front_of_monitor: obj
-                .get("DipTreatRemoteDesktopAsSittingInFrontOfMonitor")
-                .and_then(|v| v.as_u64())
-                .unwrap_or(0)
-                as u32,
-            fandom_tags: obj
-                .get("tags")
-                .and_then(|v| v.as_array())
-                .map(|arr| {
-                    arr.iter()
-                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                        .collect()
-                })
-                .unwrap_or_default(),
-        })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_steam_shortcut_default() {
-        let shortcut = SteamShortcut::default();
-        assert_eq!(shortcut.appid, 0);
-        assert_eq!(shortcut.appname, "");
-        assert_eq!(shortcut.is_hidden, 0);
-        assert_eq!(shortcut.allow_desktop_config, 1);
     }
 }

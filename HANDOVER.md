@@ -63,11 +63,42 @@ cargo build --release
 - **No game validation**: Binary doesn't check executable existence before launch
 - **UMU-Launcher required**: Fails if `umu-run` not installed/in PATH
 
+## Dead Code Cleanup (Iteration 3)
+
+### Removed Items
+- **`src/config/paths.rs`**:
+  - `faugus_proton_manager()` — legacy Python binary integration (dead)
+  - 8 unused TODO functions: `temp_dir()`, `lock_file()`, `share_dir()`, `is_steam_flatpak()`, `steam_common_dirs()`, `find_lossless_dll()`, `is_flatpak()`, `lsfgvk_so()`
+  - Removed obsolete `#[allow(dead_code)]` from `default_prefix()` (now actively used)
+
+- **`src/utils/components.rs`** — entire module removed
+  - `ComponentManager` struct and all methods (all marked dead_code, never used)
+
+- **`src/steam/shortcuts.rs`**:
+  - `SteamShortcut` struct (marked dead_code, never used)
+  - `get_all()` method (dead_code, only returned SteamShortcut)
+  - `value_to_shortcut()` method (dead_code, only converted to SteamShortcut)
+  - Related test `test_steam_shortcut_default()`
+
+### Directory Changes
+- Removed empty `src/utils/` directory and `src/utils/mod.rs`
+- Removed `mod utils;` from `src/main.rs`
+
+### Preserved Items (Not Removed)
+- `Paths::faugus_run()` — actively used in `src/shortcuts/desktop_entry.rs`
+- `Paths::envar_txt()` — actively used in launcher
+- `AppConfig.lossless_location` — active config field
+- All working Steam VDF parsing code and new-vdf-parser usage
+
+### Verification
+- ✅ `cargo fmt`
+- ✅ `cargo clippy --all-targets -- -D warnings`
+- ✅ `cargo test` (29 tests pass)
+
 ## Next Steps
 1. **Packaging**: Install `faugus-run` to `/usr/local/bin/` or `/usr/bin/` via package manager
-2. **Cleanup**: Remove dead Python root references from Rust path handling (if any remain)
-3. **Optional**: Move tracing initialization from main.rs to library entry point for better reusability
-4. **Desktop integration**: Update `.desktop` files and Steam shortcuts to reference Rust binary
+2. **Optional**: Move tracing initialization from main.rs to library entry point for better reusability
+3. **Desktop integration**: Update `.desktop` files and Steam shortcuts to reference Rust binary
 
 ## Technical Details
 
