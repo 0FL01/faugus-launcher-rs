@@ -1,1 +1,2 @@
 option('flatpak_build', type: 'boolean', value: false, description: 'Set to true when building for Flatpak')
+option('legacy_python', type: 'boolean', value: false, description: 'Install legacy Python scripts and modules (default: false, Rust is default)')
