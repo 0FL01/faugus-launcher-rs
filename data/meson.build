@@ -28,6 +28,7 @@ faugus_proton_manager_desktop = configure_file(
   output: faugus_proton_manager_out,
   configuration: {
     'ICON': icon_name,
+    'EXEC': 'faugus-launcher',
   }
 )
 
@@ -36,6 +37,7 @@ faugus_run_desktop = configure_file(
   output: faugus_run_out,
   configuration: {
     'ICON': icon_name,
+    'EXEC_RUN': 'faugus-run',
   }
 )
 
@@ -44,13 +46,22 @@ faugus_shortcut_desktop = configure_file(
   output: faugus_shortcut_out,
   configuration: {
     'ICON': icon_name,
+    'EXEC': 'faugus-launcher',
   }
 )
 
-install_data(
+desktop_files_to_install = [
   faugus_launcher_desktop,
   faugus_proton_manager_desktop,
   faugus_run_desktop,
-  faugus_shortcut_desktop,
+]
+
+# Only install shortcut creator with legacy_python
+if get_option('legacy_python')
+  desktop_files_to_install += faugus_shortcut_desktop
+endif
+
+install_data(
+  desktop_files_to_install,
   install_dir: get_option('datadir') / 'applications'
 )

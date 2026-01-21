@@ -12,16 +12,20 @@ on:
         required: false
         type: boolean
         default: false
+  push:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+      actions: write
     env:
       CARGO_TERM_COLOR: always
-      APP_NAME: faugus-launcher-rs
-      BIN_NAME: faugus-launcher-rs
+      APP_NAME: faugus-launcher
+      BIN_NAME: faugus-launcher
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -59,7 +63,12 @@ jobs:
 
       - name: Prepare staging
         run: |
-          VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+          BASE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+          if [ "$GITHUB_EVENT_NAME" == "push" ]; then
+            VERSION="${BASE_VERSION}.nightly.${GITHUB_SHA::7}"
+          else
+            VERSION="$BASE_VERSION"
+          fi
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
           # Binaries
@@ -77,32 +86,19 @@ jobs:
           
           # Desktop Entry
           mkdir -p dist/root/usr/share/applications
-          cat > dist/root/usr/share/applications/faugus-launcher-rs.desktop <<EOF
+          cat > dist/root/usr/share/applications/io.github.Faugus.faugus-launcher.desktop <<EOF
           [Desktop Entry]
           Categories=Game;Utility;
           Comment=Lightweight launcher for Windows games on Linux using UMU-Launcher
-          Exec=${BIN_NAME} %f
+          Exec=${BIN_NAME} %F
           Icon=faugus-launcher
           MimeType=application/x-ms-dos-executable;application/x-msi;application/x-ms-shortcut;application/x-bat;text/x-ms-regedit
-          Name=Faugus Launcher (Rust)
+          Name=Faugus Launcher
           Terminal=false
           Type=Application
           StartupNotify=true
           EOF
 
-          # faugus-run CLI desktop entry (for testing/CLI usage)
-          cat > dist/root/usr/share/applications/faugus-run.desktop <<EOF
-          [Desktop Entry]
-          Categories=Game;Utility;
-          Comment=CLI launcher for Windows games on Linux
-          Exec=faugus-run --game %u
-          Icon=faugus-launcher
-          Name=Faugus Run (CLI)
-          Terminal=true
-          Type=Application
-          StartupNotify=true
-          EOF
-          
           # Icons
           mkdir -p dist/root/usr/share/icons/hicolor/512x512/apps
           mkdir -p dist/root/usr/share/icons/hicolor/scalable/apps
@@ -157,11 +153,57 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: faugus-launcher-packages
+          name: ${{ github.event_name == 'push' && format('faugus-launcher-packages-nightly-{0}', github.sha) || 'faugus-launcher-packages' }}
           path: dist/out
 
+      - name: Cleanup old nightly artifacts
+        if: ${{ github.event_name == 'push' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const retention = 3; // Keep last 3 nightly artifacts
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pattern = /^faugus-launcher-packages-nightly-/;
+
+            // List all artifacts
+            const artifacts = await github.rest.actions.listArtifactsForRepo({
+              owner,
+              repo,
+              per_page: 100
+            });
+
+            // Filter and sort nightly artifacts
+            const nightlyArtifacts = artifacts.data.artifacts
+              .filter(artifact => pattern.test(artifact.name))
+              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            // Delete artifacts beyond retention limit
+            const toDelete = nightlyArtifacts.slice(retention);
+            for (const artifact of toDelete) {
+              await github.rest.actions.deleteArtifact({
+                owner,
+                repo,
+                artifact_id: artifact.id
+              });
+              console.log(`Deleted artifact: ${artifact.name} (created: ${artifact.created_at})`);
+            }
+
+            console.log(`Cleanup complete: kept ${Math.min(retention, nightlyArtifacts.length)} of ${nightlyArtifacts.length} nightly artifacts`);
+
+      - name: Create Nightly Release
+        if: ${{ github.event_name == 'push' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly
+          name: Nightly Build
+          draft: false
+          prerelease: true
+          target_commitish: ${{ github.sha }}
+          files: dist/out/*
+
       - name: Create GitHub Release
-        if: ${{ inputs.create_release == true }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.create_release == true }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.release_tag }}
@@ -171,4 +213,5 @@ jobs:
           files: |
             dist/out/*.deb
             dist/out/*.rpm
+            dist/out/*.pkg.tar.zst
             dist/out/*.tar.zst

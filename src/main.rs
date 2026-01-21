@@ -10,7 +10,6 @@ mod proton;
 mod shortcuts;
 mod steam;
 mod tray;
-mod utils;
 
 use iced::widget::{container, mouse_area, stack, Space};
 use iced::{window, Color, Element, Length, Padding, Point, Size, Subscription, Task};

@@ -1,5 +1,82 @@
 # Handover Notes: Rust faugus-run Final (Iterations 1-2 Complete)
 
+## Iteration 1/3 Update — Canonical Rust Exec (Binary Rename)
+
+### What Changed
+- **GUI binary renamed**: `faugus-launcher-rs` → `faugus-launcher` (canonical name)
+- **Build output**: `cargo build --release` now produces `target/release/faugus-launcher` (not `faugus-launcher-rs`)
+- **CI workflow**: Updated `release-packages.yml` to install `/usr/bin/faugus-launcher` and use desktop entry `io.github.Faugus.faugus-launcher.desktop` with `Exec=faugus-launcher %F`
+- **Documentation**: Updated README.md, HANDOVER.md, and `scripts/verify-package.sh` to reference the new binary name
+- **Package name**: Changed from `faugus-launcher-rs` to `faugus-launcher` for deb/rpm/pacman packages
+
+### What Stayed the Same
+- XDG paths/app directories unchanged (`~/.config/faugus-launcher/`, `~/.local/share/faugus-launcher/`)
+- `faugus-run` CLI binary unchanged (still produces `faugus-run`)
+- Library crate name remains `faugus_launcher_rs` (larger refactoring deferred)
+- All game configs/prefixes/logic untouched
+
+### Verification
+```bash
+# Build should produce canonical binary name
+cargo build --release --bins
+ls target/release | rg 'faugus-launcher(\b|$)'
+# Expected: faugus-launcher and faugus-run (no faugus-launcher-rs)
+```
+
+### Next Steps (Iteration 2/3)
+- ~~Update `data/*.desktop.in` templates to use canonical binary name~~ ✅ Completed
+- ~~Remove Python build system (meson) references~~ ✅ Completed (made optional via `legacy_python` flag)
+- Remove legacy Python wrappers
+
+---
+
+## Iteration 2/3 Update — Desktop Templates + Meson de-Python
+
+### What Changed
+- **Meson build system**: Added `legacy_python` option (default: false) to gate Python installations
+- **Python scripts**: Installation of `faugus_launcher.py`, `faugus_run.py`, `faugus_proton_manager.py` now requires `-Dlegacy_python=true`
+- **Python modules**: `faugus/*.py` module installation also gated by `legacy_python` option
+- **Desktop entry templates**: Updated to use Rust binaries by default
+  - Main launcher: `Exec=@EXEC@ %F` (with `EXEC='faugus-launcher'`)
+  - Proton manager: Changed from `Exec=faugus-proton-manager` to `Exec=@EXEC@` (with `EXEC='faugus-launcher'`)
+  - Run: Uses `Exec=faugus-run` (Rust CLI binary, unchanged)
+  - Shortcut creator: Changed from Python script to `Exec=@EXEC@ %F` (with `EXEC='faugus-launcher'`), install gated by `legacy_python`
+- **Shortcut desktop entry**: No longer installed by default; only installed when `legacy_python=true`
+- **meson_options.txt**: Added new option for legacy Python support
+
+### What Stayed the Same
+- XDG paths/app directories unchanged (`~/.config/faugus-launcher/`, `~/.local/share/faugus-launcher/`)
+- `faugus-run` CLI binary path unchanged
+- All game configs/prefixes/logic untouched
+- Python source files remain in repo (only installation is gated)
+- App-id naming preserved (`io.github.Faugus.faugus-launcher.*`)
+
+### Verification
+```bash
+# Verify no Python in default install
+rg 'Exec=.*python|faugus-proton-manager\b|faugus_launcher\.py|faugus_run\.py|faugus_proton_manager\.py' meson.build data faugus -n
+# Expected: 0 matches (or only matches inside `if get_option('legacy_python')` blocks)
+
+# Verify Meson configuration (if meson available)
+meson setup builddir -Dlegacy_python=false
+ninja -C builddir -n install  # dry-run, inspect output
+# Expected: No Python binaries or modules in install plan
+```
+
+### Impact on Users
+- **New installs**: Will only get Rust binaries (`faugus-launcher`, `faugus-run`)
+- **Legacy Python**: Users who need Python version can build with `-Dlegacy_python=true`
+- **Steam shortcuts**: Existing shortcuts continue to work (Proton manager now opens GUI where users can access Proton Manager dialog)
+- **Shortcut creator**: No longer installed by default; users can create shortcuts through the Rust GUI
+
+### Next Steps (Iteration 3/3)
+- Add Rust CLI flags for direct Proton Manager access (`faugus-launcher --proton-manager`)
+- Add Rust CLI flags for direct shortcut creator access (`faugus-launcher --shortcut <exe>`)
+- Final documentation updates
+- Remove Python sources from repo (if desired)
+
+---
+
 ## Summary
 Implemented Rust `faugus-run` CLI binary that fully replaces Python `faugus_run.py` for game launching, removing Python runtime dependency from the launch path while preserving complete compatibility with existing configurations and prefixes.
 
@@ -43,7 +120,7 @@ cargo run --bin faugus-run -- --game <gameid>
 
 # Release build
 cargo build --release
-./target/release/faugus-launcher-rs          # GUI
+./target/release/faugus-launcher          # GUI
 ./target/release/faugus-run --game <gameid>  # CLI
 ```
 
@@ -63,11 +140,42 @@ cargo build --release
 - **No game validation**: Binary doesn't check executable existence before launch
 - **UMU-Launcher required**: Fails if `umu-run` not installed/in PATH
 
+## Dead Code Cleanup (Iteration 3)
+
+### Removed Items
+- **`src/config/paths.rs`**:
+  - `faugus_proton_manager()` — legacy Python binary integration (dead)
+  - 8 unused TODO functions: `temp_dir()`, `lock_file()`, `share_dir()`, `is_steam_flatpak()`, `steam_common_dirs()`, `find_lossless_dll()`, `is_flatpak()`, `lsfgvk_so()`
+  - Removed obsolete `#[allow(dead_code)]` from `default_prefix()` (now actively used)
+
+- **`src/utils/components.rs`** — entire module removed
+  - `ComponentManager` struct and all methods (all marked dead_code, never used)
+
+- **`src/steam/shortcuts.rs`**:
+  - `SteamShortcut` struct (marked dead_code, never used)
+  - `get_all()` method (dead_code, only returned SteamShortcut)
+  - `value_to_shortcut()` method (dead_code, only converted to SteamShortcut)
+  - Related test `test_steam_shortcut_default()`
+
+### Directory Changes
+- Removed empty `src/utils/` directory and `src/utils/mod.rs`
+- Removed `mod utils;` from `src/main.rs`
+
+### Preserved Items (Not Removed)
+- `Paths::faugus_run()` — actively used in `src/shortcuts/desktop_entry.rs`
+- `Paths::envar_txt()` — actively used in launcher
+- `AppConfig.lossless_location` — active config field
+- All working Steam VDF parsing code and new-vdf-parser usage
+
+### Verification
+- ✅ `cargo fmt`
+- ✅ `cargo clippy --all-targets -- -D warnings`
+- ✅ `cargo test` (29 tests pass)
+
 ## Next Steps
-1. **Packaging**: Install `faugus-run` to `/usr/local/bin/` or `/usr/bin/` via package manager
-2. **Cleanup**: Remove dead Python root references from Rust path handling (if any remain)
-3. **Optional**: Move tracing initialization from main.rs to library entry point for better reusability
-4. **Desktop integration**: Update `.desktop` files and Steam shortcuts to reference Rust binary
+1. ~~**Packaging**: Install `faugus-run` to `/usr/local/bin/` or `/usr/bin/` via package manager~~ ✅ Verification script added (see "Packaging Verification" section below)
+2. **Optional**: Move tracing initialization from main.rs to library entry point for better reusability
+3. **Desktop integration**: Update `.desktop` files and Steam shortcuts to reference Rust binary
 
 ## Technical Details
 
@@ -121,7 +229,7 @@ cargo build --release
 - `src/config/paths.rs` — Enabled `envar_txt()` for use
 - `src/config/mod.rs` — Exported envar module
 - `src/launcher/mod.rs` — Made game_launcher public
-- `Cargo.toml` — Added `[[bin]] faugus-run`, `[lib]`, `default-run = "faugus-launcher-rs"`
+- `Cargo.toml` — Added `[[bin]] faugus-run`, `[lib]`, `default-run = "faugus-launcher"`
 
 ## Configuration Files (Preserved)
 
@@ -157,11 +265,111 @@ cargo build --release
 sudo install -m 755 target/release/faugus-run /usr/local/bin/
 
 # Install GUI launcher
-sudo install -m 755 target/release/faugus-launcher-rs /usr/local/bin/
+sudo install -m 755 target/release/faugus-launcher /usr/local/bin/
 
 # Update .desktop files to reference:
-Exec=/usr/local/bin/faugus-run --game %u
+Exec=/usr/bin/faugus-run --game %u
 ```
+
+## Packaging Verification (Iteration 3)
+
+### Overview
+Automated script to verify that both binaries (`faugus-launcher` and `faugus-run`) are properly included in package distributions before release.
+
+### Verification Script
+
+**Location**: `scripts/verify-package.sh`
+
+**Purpose**:
+- Checks both binaries exist in `target/release/`
+- Simulates package staging workflow (creates `dist/root/usr/bin/`)
+- Validates binaries are included in mock archive
+- Shows commands for inspecting actual package files
+
+**Usage**:
+```bash
+# Build release binaries first
+cargo build --release --bins
+
+# Run verification script
+bash scripts/verify-package.sh
+```
+
+**Script Output**:
+- Step 1: Checks binaries in build directory
+- Step 2: Simulates package staging (copies binaries to `dist/root/usr/bin/`)
+- Step 3: Creates mock archive for inspection
+- Step 4: Shows package inspection commands
+- Step 5: Validates both binaries are packaged
+- Step 6: Summary and next steps
+
+**Exit Codes**:
+- `0`: Verification passed (both binaries packaged)
+- `1`: Verification failed (missing binary or error)
+
+### Manual Testing Checklist
+
+After running verification script, perform manual end-to-end testing:
+
+1. **Build packages locally**:
+   ```bash
+   cargo build --release --bins
+   # Note: Actual package building handled by CI workflow
+   ```
+
+2. **Run verification script**:
+   ```bash
+   bash scripts/verify-package.sh
+   # Expected: ✓ All checks pass
+   ```
+
+3. **Install package on test system**:
+   ```bash
+   # DEB (Debian/Ubuntu)
+   sudo dpkg -i faugus-launcher_*.deb
+
+   # RPM (Fedora/openSUSE)
+   sudo rpm -i faugus-launcher-*.rpm
+
+   # Arch (pacman)
+   sudo pacman -U faugus-launcher-*.pkg.tar.zst
+   ```
+
+4. **Verify binaries installed**:
+   ```bash
+   ls -lh /usr/bin/faugus-launcher /usr/bin/faugus-run
+   # Expected: Both binaries present and executable
+   ```
+
+ 5. **Create Steam shortcut via Rust launcher UI**:
+    - Launch `faugus-launcher`
+    - Add or edit a game
+    - Enable "Create Steam shortcut" option
+   - Save game configuration
+
+6. **Verify Steam shortcut Exec line**:
+   ```bash
+   # View generated .desktop file
+   cat ~/.local/share/applications/faugus-launcher-*.desktop
+
+   # Check Exec line points to faugus-run:
+   Exec=/usr/bin/faugus-run --game <gameid>
+   # OR: Exec=/usr/local/bin/faugus-run --game <gameid>
+   ```
+
+7. **Launch game from Steam**:
+    - Open Steam client
+    - Find game in Library
+    - Click "Play"
+    - **Expected**: Game launches via UMU-Launcher without errors
+
+8. **Verify logs**:
+    ```bash
+    # Check launcher logs
+    cat ~/.local/share/faugus-launcher/logs/<gameid>.log
+
+    # Verify UMU-Launcher was called
+    ```
 
 ## Clippy Compliance
 

@@ -6,27 +6,28 @@ project(
   license_files: 'LICENSE',
 )
 
-py = import('python').find_installation()
 fs = import('fs')
 gnome = import('gnome')
 
 subdir('assets')
 subdir('languages')
 subdir('data')
-subdir('faugus')
-
-install_data(
-  'faugus_launcher.py',
-  'faugus_run.py',
-  'faugus_proton_manager.py',
-  rename: [
-    'faugus-launcher',
-    'faugus-run',
-    'faugus-proton-manager',
-  ],
-  install_mode: 'rwxr-xr-x',
-  install_dir: get_option('bindir'),
-)
+if get_option('legacy_python')
+  py = import('python').find_installation()
+  subdir('faugus')
+  install_data(
+    'faugus_launcher.py',
+    'faugus_run.py',
+    'faugus_proton_manager.py',
+    rename: [
+      'faugus-launcher',
+      'faugus-run',
+      'faugus-proton-manager',
+    ],
+    install_mode: 'rwxr-xr-x',
+    install_dir: get_option('bindir'),
+  )
+endif
 
 install_data(
   'LICENSE',

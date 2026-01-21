@@ -23,11 +23,11 @@ The original Python (GTK3) version is available in the `legacy` branch.
 cargo build --release
 ```
 
-Binary location: `target/release/faugus-launcher-rs`
+Binary location: `target/release/faugus-launcher`
 
 #### Run
 ```bash
-./target/release/faugus-launcher-rs
+./target/release/faugus-launcher
 ```
 
 #### Development run
@@ -41,7 +41,7 @@ cargo run --bin faugus-run -- --game <id>
 
 ### Install system-wide (optional)
 ```bash
-sudo cp target/release/faugus-launcher-rs /usr/local/bin/faugus-launcher
+sudo cp target/release/faugus-launcher /usr/local/bin/faugus-launcher
 ```
 
 ---

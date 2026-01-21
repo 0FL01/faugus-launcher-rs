@@ -177,37 +177,13 @@ impl Paths {
     }
 
     /// Get default WinePREFIX path
-    /// TODO: Use for default prefix selection (add game dialog)
-    #[allow(dead_code)]
     pub fn default_prefix() -> PathBuf {
         let home = env::var("HOME").unwrap_or_else(|_| "/".to_string());
         PathBuf::from(home).join("Faugus")
     }
 
-    /// Get temporary directory for downloads
-    /// TODO: Use for Proton downloads, temp file operations
-    #[allow(dead_code)]
-    pub fn temp_dir() -> PathBuf {
-        let home = env::var("HOME").unwrap_or_else(|_| "/".to_string());
-        PathBuf::from(home).join("faugus_temp")
-    }
-
-    /// Get application lock file path
-    /// TODO: Implement single-instance lock
-    #[allow(dead_code)]
-    pub fn lock_file() -> PathBuf {
-        Self::user_data("faugus-launcher/faugus-launcher.lock")
-    }
-
     pub fn running_games_json() -> PathBuf {
         Self::user_data("faugus-launcher/running_games.json")
-    }
-
-    /// Get shared data directory
-    /// TODO: Use for cross-instance data sharing
-    #[allow(dead_code)]
-    pub fn share_dir() -> PathBuf {
-        Self::user_data("faugus-launcher")
     }
 
     /// Steam paths
@@ -256,54 +232,11 @@ impl Paths {
         None
     }
 
-    /// Check if Steam is running as Flatpak
-    /// TODO: Use for Steam integration path detection
-    #[allow(dead_code)]
-    pub fn is_steam_flatpak() -> bool {
-        if let Some(userdata_path) = Self::steam_userdata_path() {
-            let path_str = userdata_path.to_string_lossy();
-            return path_str.contains(".var/app/com.valvesoftware.Steam");
-        }
-        false
-    }
-
     /// Steam compatibility tools directory
     pub fn steam_compat_tools_dir() -> PathBuf {
         Self::xdg_data_home()
             .join("Steam")
             .join("compatibilitytools.d")
-    }
-
-    /// Steam common games directory
-    /// Note: Currently unused but kept for potential future use/compatibility
-    #[allow(dead_code)]
-    pub fn steam_common_dirs() -> Vec<PathBuf> {
-        let home = env::var("HOME").unwrap_or_else(|_| "/".to_string());
-        let home_path = PathBuf::from(&home);
-
-        vec![
-            home_path.join(".local/share/Steam/steamapps/common"),
-            home_path.join(".steam/steam/steamapps/common"),
-            home_path.join(".steam/root/steamapps/common"),
-            PathBuf::from(format!(
-                "{}/.var/app/com.valvesoftware.Steam/.steam/steam/steamapps/common/",
-                home
-            )),
-            PathBuf::from(format!("{}/SteamLibrary/steamapps/common", home)),
-        ]
-    }
-
-    /// Find Lossless scaling DLL
-    /// Note: Previously used for LD_PRELOAD approach; kept for compatibility
-    #[allow(dead_code)]
-    pub fn find_lossless_dll() -> Option<PathBuf> {
-        for common_dir in Self::steam_common_dirs() {
-            let dll_path = common_dir.join("Lossless Scaling/Lossless.dll");
-            if dll_path.exists() {
-                return Some(dll_path);
-            }
-        }
-        None
     }
 
     /// Desktop directory
@@ -333,23 +266,9 @@ impl Paths {
         Self::xdg_data_home().join("applications")
     }
 
-    /// Check if running in Flatpak
-    /// TODO: Use for Flatpak-specific path adjustments
-    #[allow(dead_code)]
-    pub fn is_flatpak() -> bool {
-        env::var("FLATPAK_ID").is_ok() || PathBuf::from("/.flatpak-info").exists()
-    }
-
     /// Get faugus-run binary path
     pub fn faugus_run() -> Option<PathBuf> {
         Self::find_binary("faugus-run")
-    }
-
-    /// Get faugus-proton-manager binary path
-    /// TODO: Use for legacy Python binary integration
-    #[allow(dead_code)]
-    pub fn faugus_proton_manager() -> Option<PathBuf> {
-        Self::find_binary("faugus-proton-manager")
     }
 
     /// Get umu-run path
@@ -365,22 +284,5 @@ impl Paths {
     /// Get gamemoderun binary
     pub fn gamemoderun() -> Option<PathBuf> {
         Self::find_binary("gamemoderun")
-    }
-
-    /// Get lsfgvk.so path (Fossilize VK layer)
-    /// TODO: Use for VK layer integration
-    #[allow(dead_code)]
-    pub fn lsfgvk_so() -> Option<PathBuf> {
-        let possible_paths = vec![
-            PathBuf::from("/usr/lib/extensions/vulkan/lsfgvk/lib/liblsfg-vk.so"),
-            PathBuf::from("/usr/lib/liblsfg-vk.so"),
-            PathBuf::from("/usr/lib64/liblsfg-vk.so"),
-            PathBuf::from(format!(
-                "{}/.local/lib/liblsfg-vk.so",
-                env::var("HOME").unwrap_or_default()
-            )),
-        ];
-
-        possible_paths.into_iter().find(|path| path.exists())
     }
 }
