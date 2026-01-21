@@ -168,6 +168,17 @@ jobs:
           name: ${{ github.event_name == 'push' && format('faugus-launcher-packages-nightly-{0}', github.sha) || 'faugus-launcher-packages' }}
           path: dist/out
 
+      - name: Create Nightly Release
+        if: ${{ github.event_name == 'push' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly
+          name: Nightly Build
+          draft: false
+          prerelease: true
+          target_commitish: ${{ github.sha }}
+          files: dist/out/*
+
       - name: Create GitHub Release
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.create_release == true }}
         uses: softprops/action-gh-release@v2
@@ -179,4 +190,5 @@ jobs:
           files: |
             dist/out/*.deb
             dist/out/*.rpm
+            dist/out/*.pkg.tar.zst
             dist/out/*.tar.zst
