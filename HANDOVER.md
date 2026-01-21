@@ -96,7 +96,7 @@ cargo build --release
 - ✅ `cargo test` (29 tests pass)
 
 ## Next Steps
-1. **Packaging**: Install `faugus-run` to `/usr/local/bin/` or `/usr/bin/` via package manager
+1. ~~**Packaging**: Install `faugus-run` to `/usr/local/bin/` or `/usr/bin/` via package manager~~ ✅ Verification script added (see "Packaging Verification" section below)
 2. **Optional**: Move tracing initialization from main.rs to library entry point for better reusability
 3. **Desktop integration**: Update `.desktop` files and Steam shortcuts to reference Rust binary
 
