@@ -166,10 +166,6 @@ impl FaugusLauncher {
         )
     }
 
-    fn title(&self) -> String {
-        self.main_window.title()
-    }
-
     fn subscription(&self) -> Subscription<Message> {
         iced::time::every(std::time::Duration::from_secs(1)).map(|_| Message::Tick)
     }

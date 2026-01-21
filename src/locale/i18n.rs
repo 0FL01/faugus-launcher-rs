@@ -637,6 +637,8 @@ impl Default for I18n {
 }
 
 /// Get system locale
+/// DEPRECATED: Use detect_language() or I18n::from_system_locale()
+#[allow(dead_code)]
 pub fn get_system_locale() -> String {
     // Check environment variables
     if let Ok(lang) = std::env::var("LANG") {
@@ -656,6 +658,8 @@ pub fn get_system_locale() -> String {
 }
 
 /// Detect language from config or system
+/// TODO: Use for first-run language detection
+#[allow(dead_code)]
 pub fn detect_language(config_language: Option<String>) -> String {
     if let Some(lang) = config_language {
         if !lang.is_empty() {

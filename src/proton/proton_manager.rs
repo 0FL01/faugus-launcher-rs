@@ -35,8 +35,12 @@ pub struct ProtonAsset {
 #[derive(Debug, Clone)]
 pub struct ProtonConfig {
     pub label: &'static str,
+    /// TODO: Use for custom installation paths
+    #[allow(dead_code)]
     pub dir: &'static str,
     pub api: &'static str,
+    /// TODO: Use for custom archive format support
+    #[allow(dead_code)]
     pub archive_ext: &'static str,
 }
 
@@ -77,6 +81,8 @@ impl ProtonManager {
     }
 
     /// Get latest Proton release information
+    /// TODO: Use for version checking and update notifications
+    #[allow(dead_code)]
     pub async fn get_latest_release(&self, config: &ProtonConfig) -> Result<ProtonRelease> {
         info!("Fetching latest {} release", config.label);
 
@@ -148,6 +154,8 @@ impl ProtonManager {
     }
 
     /// Get all available Proton versions
+    /// TODO: Use for Proton manager dialog version list
+    #[allow(dead_code)]
     pub async fn get_available_versions(&self) -> Result<Vec<String>> {
         let mut versions = Vec::new();
 
@@ -215,6 +223,8 @@ impl ProtonManager {
     }
 
     /// Download a Proton version
+    /// TODO: Use for Proton manager dialog download button
+    #[allow(dead_code)]
     pub async fn download_proton(
         &self,
         config: &ProtonConfig,
@@ -266,6 +276,8 @@ impl ProtonManager {
     }
 
     /// Extract downloaded Proton archive
+    /// TODO: Use for Proton installation
+    #[allow(dead_code)]
     async fn extract_archive(&self, archive_path: &PathBuf, _config: &ProtonConfig) -> Result<()> {
         info!("Extracting {}", archive_path.display());
 
@@ -290,7 +302,9 @@ impl ProtonManager {
         Ok(())
     }
 
-    /// Delete a Proton version
+    /// Delete a Proton-cheat version
+    /// TODO: Use for Proton manager dialog delete button
+    #[allow(dead_code)]
     pub fn delete_proton(&self, name: &str) -> Result<()> {
         let path = self.compat_dir.join(name);
 
@@ -307,11 +321,15 @@ impl ProtonManager {
     }
 
     /// Get default Proton runner
+    /// TODO: Use for new game default selection
+    #[allow(dead_code)]
     pub fn get_default_runner() -> String {
         String::from("GE-Proton")
     }
 
     /// Check if a Proton version is installed
+    /// TODO: Use for Proton manager dialog version list
+    #[allow(dead_code)]
     pub fn is_installed(&self, name: &str) -> bool {
         self.compat_dir.join(name).exists()
     }
@@ -324,6 +342,8 @@ impl Default for ProtonManager {
 }
 
 /// Format file size for display
+/// TODO: Use for download progress display
+#[allow(dead_code)]
 fn format_size(bytes: u64) -> String {
     const GB: u64 = 1024 * 1024 * 1024;
     const MB: u64 = 1024 * 1024;

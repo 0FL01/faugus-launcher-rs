@@ -12,7 +12,6 @@ pub struct TrayMenu {
     menu: Menu,
     show_item: muda::MenuItem,
     hide_item: muda::MenuItem,
-    quit_item: muda::MenuItem,
 }
 
 impl TrayMenu {
@@ -22,12 +21,13 @@ impl TrayMenu {
 
         let show_item = muda::MenuItem::with_id("show", i18n.t("Show"), true, None);
         let hide_item = muda::MenuItem::with_id("hide", i18n.t("Hide"), true, None);
-        let quit_item = muda::MenuItem::with_id("quit", i18n.t("Quit"), true, None);
 
         menu.append(&show_item)?;
         menu.append(&hide_item)?;
         menu.append(&muda::PredefinedMenuItem::separator())?;
-        menu.append(&quit_item)?;
+
+        let _quit_item = muda::MenuItem::with_id("quit", i18n.t("Quit"), true, None);
+        menu.append(&_quit_item)?;
 
         info!("Tray menu created");
 
@@ -35,7 +35,6 @@ impl TrayMenu {
             menu,
             show_item,
             hide_item,
-            quit_item,
         })
     }
 

@@ -121,9 +121,10 @@ impl LogViewerDialog {
                 info!("Opening log directory: {:?}", logs_dir);
 
                 // Try to open with xdg-open
-                if let Ok(_) = std::process::Command::new("xdg-open")
+                if std::process::Command::new("xdg-open")
                     .arg(&logs_dir)
                     .spawn()
+                    .is_ok()
                 {
                     info!("Opened log directory with xdg-open");
                 } else {

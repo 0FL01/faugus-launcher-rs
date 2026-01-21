@@ -8,6 +8,27 @@ use std::path::PathBuf;
 
 use crate::config::paths::Paths;
 
+/// Format game title for use in filenames/IDs
+/// Converts "Test's Game" -> "tests-game", "My Game" -> "my-game"
+pub fn format_title(title: &str) -> String {
+    title
+        .trim()
+        .to_lowercase()
+        .chars()
+        .map(|c| match c {
+            ' ' => '-',                    // spaces become hyphens
+            c if c.is_alphanumeric() => c, // keep letters/numbers
+            c if c == '-' => c,            // keep existing hyphens
+            _ => '\u{0000}',               // mark other chars for removal (null char)
+        })
+        .filter(|&c| c != '\u{0000}') // remove marked chars
+        .collect::<String>()
+        .split('-')
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<&str>>()
+        .join("-")
+}
+
 /// Legacy compatibility module for deserializing Python format games.json
 mod legacy_compat {
     use serde::{Deserialize, Deserializer};
@@ -497,7 +518,8 @@ mod tests {
             "hidden": false
         }]"#;
 
-        let games: Vec<Game> = serde_json::from_str(python_json).unwrap();
+        let games: Vec<Game> =
+            serde_json::from_str(python_json).expect("Failed to deserialize Python format JSON");
 
         assert_eq!(games.len(), 1);
         let game = &games[0];
@@ -550,7 +572,8 @@ mod tests {
             "hidden": false
         }]"#;
 
-        let games: Vec<Game> = serde_json::from_str(rust_json).unwrap();
+        let games: Vec<Game> =
+            serde_json::from_str(rust_json).expect("Failed to deserialize Rust format JSON");
 
         assert_eq!(games.len(), 1);
         let game = &games[0];
@@ -594,7 +617,8 @@ mod tests {
             "hidden": false
         }]"#;
 
-        let games: Vec<Game> = serde_json::from_str(json).unwrap();
+        let games: Vec<Game> =
+            serde_json::from_str(json).expect("Failed to deserialize JSON with empty banner");
 
         assert_eq!(games.len(), 1);
         let game = &games[0];
@@ -632,8 +656,9 @@ mod tests {
             hidden: false,
         };
 
-        let json = serde_json::to_string(&game).unwrap();
-        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&game).expect("Failed to serialize game to JSON");
+        let parsed: serde_json::Value =
+            serde_json::from_str(&json).expect("Failed to parse serialized JSON");
 
         assert!(
             parsed["mangohud"].is_boolean(),

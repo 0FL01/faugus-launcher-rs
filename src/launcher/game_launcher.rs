@@ -285,6 +285,8 @@ impl GameLauncher {
     }
 
     /// Get game process by title
+    /// TODO: Use for game process monitoring, status display
+    #[allow(dead_code)]
     pub fn get_game_process(title: &str) -> Option<GameProcess> {
         let running_games = Paths::running_games_json();
 

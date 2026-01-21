@@ -60,7 +60,7 @@ impl ConfirmationDialog {
         // Only show remove prefix if it's not the default one
         let default_prefix = crate::config::paths::Paths::default_prefix();
         let show_remove_prefix =
-            prefix != &default_prefix && prefix.to_string_lossy() != "default" && prefix.exists();
+            prefix != default_prefix && prefix.to_string_lossy() != "default" && prefix.exists();
 
         Self::new(
             crate::locale::i18n::I18n::default().t("Confirm"),

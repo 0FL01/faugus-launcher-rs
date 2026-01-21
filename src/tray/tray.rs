@@ -25,6 +25,8 @@ pub enum TrayEvent {
 }
 
 /// Messages for tray communication
+/// TODO: Implement tray event handling (UI integration)
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum TrayMessage {
     /// Set window visibility state
@@ -43,6 +45,8 @@ pub struct SystemTray {
     icon: Option<TrayIcon>,
     menu: Option<TrayMenu>,
     tray_icon: Option<tray_icon::TrayIcon>,
+    /// TODO: Use for event channel to UI
+    #[allow(dead_code)]
     event_tx: Option<mpsc::Sender<TrayEvent>>,
     window_visible: bool,
 }
@@ -104,11 +108,15 @@ impl SystemTray {
     }
 
     /// Set the event sender for tray events
+    /// TODO: Use for UI-tray communication channel
+    #[allow(dead_code)]
     pub fn set_event_sender(&mut self, tx: mpsc::Sender<TrayEvent>) {
         self.event_tx = Some(tx);
     }
 
     /// Handle tray messages
+    /// TODO: Use for UI-tray message handling
+    #[allow(dead_code)]
     pub fn handle_message(&mut self, message: TrayMessage) -> Result<()> {
         match message {
             TrayMessage::SetWindowVisible(visible) => {
@@ -151,6 +159,8 @@ impl SystemTray {
     }
 
     /// Show a system notification
+    /// TODO: Use for game launch/quit notifications
+    #[allow(dead_code)]
     fn show_notification(&self, title: &str, body: &str) -> Result<()> {
         notify_rust::Notification::new()
             .summary(title)
@@ -160,6 +170,8 @@ impl SystemTray {
     }
 
     /// Check if tray is enabled
+    /// TODO: Use for tray toggle in settings
+    #[allow(dead_code)]
     pub fn is_enabled(&self) -> bool {
         self.config.enabled && self.tray_icon.is_some()
     }

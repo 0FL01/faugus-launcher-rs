@@ -32,6 +32,8 @@ impl TrayIcon {
     }
 
     /// Get the icon path
+    /// TODO: Use for icon refresh, custom icon support
+    #[allow(dead_code)]
     pub fn path(&self) -> &PathBuf {
         &self.icon_path
     }

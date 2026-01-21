@@ -4,11 +4,11 @@
 use iced::widget::{
     button, checkbox, column, container, pick_list, row, scrollable, text, text_input, Space,
 };
-use iced::{Alignment, Element, Length, Padding, Task};
+use iced::{Element, Length, Padding, Task};
 use std::fmt;
 use std::path::PathBuf;
 
-use crate::config::{AppConfig, Game};
+use crate::config::{format_title, AppConfig, Game};
 use crate::gui::file_picker;
 use crate::gui::styles::DeepSpace;
 use crate::locale::I18n;
@@ -392,29 +392,9 @@ impl AddGameDialog {
 
     /// Get default prefix path for a game
     fn default_prefix_for_game(title: &str) -> PathBuf {
-        let formatted_title = Self::format_title(title);
+        let formatted_title = format_title(title);
         let home = std::env::var("HOME").unwrap_or_else(|_| "/".to_string());
         PathBuf::from(home).join("Faugus").join(formatted_title)
-    }
-
-    /// Format game title for use in paths
-    fn format_title(title: &str) -> String {
-        title
-            .trim()
-            .to_lowercase()
-            .chars()
-            .map(|c| {
-                if c.is_alphanumeric() || c == '-' {
-                    c
-                } else {
-                    '-'
-                }
-            })
-            .collect::<String>()
-            .split('-')
-            .filter(|s| !s.is_empty())
-            .collect::<Vec<&str>>()
-            .join("-")
     }
 
     /// Validate the form
@@ -490,7 +470,7 @@ impl AddGameDialog {
                     .parent()
                     .unwrap_or_else(|| std::path::Path::new("/"))
                     .display(),
-                Self::format_title(&self.game_title)
+                format_title(&self.game_title)
             )
         } else {
             String::new()
@@ -563,35 +543,37 @@ impl AddGameDialog {
         let shortcuts_section = self.view_shortcuts_section(i18n);
         let buttons_section = self.view_buttons(i18n);
 
-        let scrollable = scrollable(column![
-            title_section,
-            Space::with_height(Length::Fixed(10.0)),
-            path_section,
-            Space::with_height(Length::Fixed(10.0)),
-            prefix_section,
-            Space::with_height(Length::Fixed(10.0)),
-            launcher_type_section,
-            Space::with_height(Length::Fixed(10.0)),
-            runner_section,
-            Space::with_height(Length::Fixed(10.0)),
-            protonfix_section,
-            Space::with_height(Length::Fixed(10.0)),
-            banner_section,
-            Space::with_height(Length::Fixed(10.0)),
-            arguments_section,
-            Space::with_height(Length::Fixed(10.0)),
-            options_section,
-            Space::with_height(Length::Fixed(10.0)),
-            tools_section,
-            Space::with_height(Length::Fixed(10.0)),
-            shortcuts_section,
-        ]
-        .padding(Padding {
-            top: 0.0,
-            right: 10.0,
-            bottom: 0.0,
-            left: 0.0,
-        }))
+        let scrollable = scrollable(
+            column![
+                title_section,
+                Space::with_height(Length::Fixed(10.0)),
+                path_section,
+                Space::with_height(Length::Fixed(10.0)),
+                prefix_section,
+                Space::with_height(Length::Fixed(10.0)),
+                launcher_type_section,
+                Space::with_height(Length::Fixed(10.0)),
+                runner_section,
+                Space::with_height(Length::Fixed(10.0)),
+                protonfix_section,
+                Space::with_height(Length::Fixed(10.0)),
+                banner_section,
+                Space::with_height(Length::Fixed(10.0)),
+                arguments_section,
+                Space::with_height(Length::Fixed(10.0)),
+                options_section,
+                Space::with_height(Length::Fixed(10.0)),
+                tools_section,
+                Space::with_height(Length::Fixed(10.0)),
+                shortcuts_section,
+            ]
+            .padding(Padding {
+                top: 0.0,
+                right: 10.0,
+                bottom: 0.0,
+                left: 0.0,
+            }),
+        )
         .width(Length::Fill)
         .height(Length::FillPortion(1))
         .style(DeepSpace::scrollable);
@@ -856,7 +838,6 @@ impl AddGameDialog {
                     .size(12)
                     .style(|_theme: &iced::Theme| iced::widget::text::Style {
                         color: Some(iced::Color::new(1.0, 0.0, 0.0, 1.0)),
-                        ..Default::default()
                     }),
             ]
             .into()
@@ -874,12 +855,14 @@ impl AddGameDialog {
                         .width(Length::Fixed(150.0))
                         .style(DeepSpace::button),
                     Space::with_width(Length::Fixed(10.0)),
-                    button(text(if self.is_edit {
-                        i18n.t("Save")
-                    } else {
-                        i18n.t("Add")
-                    })
-                    .size(14))
+                    button(
+                        text(if self.is_edit {
+                            i18n.t("Save")
+                        } else {
+                            i18n.t("Add")
+                        })
+                        .size(14)
+                    )
                     .on_press(AddGameMessage::Confirm)
                     .width(Length::Fixed(150.0))
                     .style(DeepSpace::primary_button),

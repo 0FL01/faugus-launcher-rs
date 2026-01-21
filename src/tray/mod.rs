@@ -1,6 +1,9 @@
 // System Tray Integration
 // Provides system tray icon and menu functionality for Faugus Launcher
 
+// tray.rs module contains SystemTray implementation
+#![allow(clippy::module_inception)]
+
 mod icon;
 mod menu;
 mod tray;
@@ -14,11 +17,14 @@ use std::path::PathBuf;
 pub struct TrayConfig {
     /// Enable system tray icon
     pub enabled: bool,
-    /// Start minimized to tray
+    /// TODO: Implement startup behavior (minimized to tray)
+    #[allow(dead_code)]
     pub start_minimized: bool,
-    /// Close to tray instead of quitting
+    /// TODO: Implement close-to-tray behavior
+    #[allow(dead_code)]
     pub close_to_tray: bool,
-    /// Show notifications
+    /// TODO: Implement tray notifications
+    #[allow(dead_code)]
     pub show_notifications: bool,
     /// Use monochrome icon
     pub is_mono: bool,

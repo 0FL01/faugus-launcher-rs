@@ -10,6 +10,8 @@ use tracing::{info, warn};
 use crate::config::paths::Paths;
 
 /// Icon sizes for different use cases
+/// TODO: Implement icon size selection in UI (grid view, list view)
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
 pub enum IconSize {
     Small = 32,
@@ -75,12 +77,10 @@ impl IconManager {
         match output {
             Ok(result) if result.status.success() => {
                 // Convert .ico to .png using icotool or ImageMagick
-                if temp_ico.exists() {
-                    if let Ok(_) = Self::convert_ico_to_png(&temp_ico, &icon_path) {
-                        // Clean up temp file
-                        let _ = fs::remove_file(&temp_ico);
-                        return Ok(icon_path);
-                    }
+                if temp_ico.exists() && Self::convert_ico_to_png(&temp_ico, &icon_path).is_ok() {
+                    // Clean up temp file
+                    let _ = fs::remove_file(&temp_ico);
+                    return Ok(icon_path);
                 }
             }
             _ => {
@@ -150,17 +150,21 @@ impl IconManager {
 
     /// Convert .ico file to .png
     fn convert_ico_to_png(ico_path: &std::path::Path, png_path: &std::path::Path) -> Result<()> {
+        let png_dir = png_path
+            .parent()
+            .context("PNG path has no parent directory")?;
+
         // Try using icotool first (part of icoutils)
         if let Ok(result) = Command::new("icotool")
             .arg("-x")
             .arg("-o")
-            .arg(png_path.parent().unwrap())
+            .arg(png_dir)
             .arg(ico_path)
             .output()
         {
             if result.status.success() {
                 // icotool creates multiple PNG files, find the largest
-                if let Some(largest) = Self::find_largest_png(png_path.parent().unwrap()) {
+                if let Some(largest) = Self::find_largest_png(png_dir) {
                     if largest != *png_path {
                         fs::copy(&largest, png_path)?;
                         // Clean up extracted files
@@ -283,17 +287,20 @@ impl IconManager {
     }
 
     /// Load icon as image handle for Iced
-    #[cfg(feature = "gui")]
-    pub fn load_icon(game_id: &str) -> Option<iced::image::Handle> {
+    /// TODO: Use for UI banner images, game cover art
+    #[allow(dead_code)]
+    pub fn load_icon(game_id: &str) -> Option<iced::widget::image::Handle> {
         let icon_path = Self::get_icon_path(game_id);
         if icon_path.exists() {
-            Some(iced::image::Handle::from_path(icon_path))
+            Some(iced::widget::image::Handle::from_path(icon_path))
         } else {
             None
         }
     }
 
     /// Get or extract icon for a game
+    /// TODO: Use for batch icon extraction on import
+    #[allow(dead_code)]
     pub fn get_or_extract_icon(exe_path: &std::path::Path, game_id: &str) -> PathBuf {
         if !Self::icon_exists(game_id) {
             if let Err(e) = Self::extract_from_exe(exe_path, game_id) {
@@ -305,6 +312,8 @@ impl IconManager {
     }
 
     /// Update icon for a game (re-extract from exe or use custom)
+    /// TODO: Use for icon refresh in edit dialog
+    #[allow(dead_code)]
     pub fn update_icon(exe_path: &std::path::Path, game_id: &str) -> Result<PathBuf> {
         // Remove old icon
         let _ = Self::delete_icon(game_id);

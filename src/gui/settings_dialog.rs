@@ -4,7 +4,7 @@
 use iced::widget::{
     button, checkbox, column, container, pick_list, row, scrollable, text, text_input, Space,
 };
-use iced::{Alignment, Element, Length, Padding, Task};
+use iced::{Element, Length, Padding, Task};
 use std::fmt;
 use std::path::PathBuf;
 
@@ -86,8 +86,6 @@ impl fmt::Display for Language {
 /// State for the Settings dialog
 #[derive(Debug, Clone)]
 pub struct SettingsDialog {
-    /// Original configuration (for cancel)
-    original_config: AppConfig,
     /// Current working configuration
     config: AppConfig,
 
@@ -134,7 +132,6 @@ impl SettingsDialog {
             .unwrap_or(0);
 
         Self {
-            original_config: config.clone(),
             config,
             language_index,
             interface_mode_index,
@@ -420,35 +417,36 @@ impl SettingsDialog {
                     .size(12)
                     .style(|_theme: &iced::Theme| iced::widget::text::Style {
                         color: Some(iced::Color::new(1.0, 0.6, 0.0, 1.0)),
-                        ..Default::default()
                     }),
             ]
         } else {
             column![]
         };
 
-        let scrollable = scrollable(column![
-            general_section,
-            Space::with_height(Length::Fixed(20.0)),
-            paths_section,
-            Space::with_height(Length::Fixed(20.0)),
-            performance_section,
-            Space::with_height(Length::Fixed(20.0)),
-            system_section,
-            Space::with_height(Length::Fixed(20.0)),
-            experimental_section,
-            Space::with_height(Length::Fixed(20.0)),
-            tools_section,
-            Space::with_height(Length::Fixed(20.0)),
-            actions_section,
-            restart_notice,
-        ]
-        .padding(Padding {
-            top: 5.0,
-            right: 15.0,
-            bottom: 5.0,
-            left: 15.0,
-        }))
+        let scrollable = scrollable(
+            column![
+                general_section,
+                Space::with_height(Length::Fixed(20.0)),
+                paths_section,
+                Space::with_height(Length::Fixed(20.0)),
+                performance_section,
+                Space::with_height(Length::Fixed(20.0)),
+                system_section,
+                Space::with_height(Length::Fixed(20.0)),
+                experimental_section,
+                Space::with_height(Length::Fixed(20.0)),
+                tools_section,
+                Space::with_height(Length::Fixed(20.0)),
+                actions_section,
+                restart_notice,
+            ]
+            .padding(Padding {
+                top: 5.0,
+                right: 15.0,
+                bottom: 5.0,
+                left: 15.0,
+            }),
+        )
         .width(Length::Fill)
         .height(Length::FillPortion(1))
         .style(DeepSpace::scrollable);

@@ -325,7 +325,6 @@ impl ProtonManagerDialog {
                     .size(12)
                     .style(|_theme: &iced::Theme| iced::widget::text::Style {
                         color: Some(iced::Color::new(1.0, 0.0, 0.0, 1.0)),
-                        ..Default::default()
                     }),
             ]
         } else {

@@ -10,6 +10,8 @@ pub const PROTON_EM_LATEST: &str = "Proton-EM Latest";
 pub enum RunnerError {
     #[error("Runner '{name}' is not installed. Please install it via Proton Manager.")]
     NotInstalled { name: String },
+    /// TODO: Use for custom path validation
+    #[allow(dead_code)]
     #[error("Invalid path: {path}")]
     InvalidPath { path: PathBuf },
 }

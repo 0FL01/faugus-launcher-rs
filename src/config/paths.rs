@@ -171,20 +171,32 @@ impl Paths {
         Self::config_dir().join("logs")
     }
 
+    /// Get path to envar.txt (legacy compatibility)
+    /// TODO: Use for envar.txt reading/writing (Python compat)
+    #[allow(dead_code)]
     pub fn envar_txt() -> PathBuf {
         Self::config_dir().join("envar.txt")
     }
 
+    /// Get default WinePREFIX path
+    /// TODO: Use for default prefix selection (add game dialog)
+    #[allow(dead_code)]
     pub fn default_prefix() -> PathBuf {
         let home = env::var("HOME").unwrap_or_else(|_| "/".to_string());
         PathBuf::from(home).join("Faugus")
     }
 
+    /// Get temporary directory for downloads
+    /// TODO: Use for Proton downloads, temp file operations
+    #[allow(dead_code)]
     pub fn temp_dir() -> PathBuf {
         let home = env::var("HOME").unwrap_or_else(|_| "/".to_string());
         PathBuf::from(home).join("faugus_temp")
     }
 
+    /// Get application lock file path
+    /// TODO: Implement single-instance lock
+    #[allow(dead_code)]
     pub fn lock_file() -> PathBuf {
         Self::user_data("faugus-launcher/faugus-launcher.lock")
     }
@@ -193,6 +205,9 @@ impl Paths {
         Self::user_data("faugus-launcher/running_games.json")
     }
 
+    /// Get shared data directory
+    /// TODO: Use for cross-instance data sharing
+    #[allow(dead_code)]
     pub fn share_dir() -> PathBuf {
         Self::user_data("faugus-launcher")
     }
@@ -214,12 +229,9 @@ impl Paths {
     }
 
     pub fn steam_userdata_path() -> Option<PathBuf> {
-        for path in Self::steam_userdata_paths() {
-            if path.exists() {
-                return Some(path);
-            }
-        }
-        None
+        Self::steam_userdata_paths()
+            .into_iter()
+            .find(|path| path.exists())
     }
 
     pub fn steam_id() -> Option<String> {
@@ -246,6 +258,9 @@ impl Paths {
         None
     }
 
+    /// Check if Steam is running as Flatpak
+    /// TODO: Use for Steam integration path detection
+    #[allow(dead_code)]
     pub fn is_steam_flatpak() -> bool {
         if let Some(userdata_path) = Self::steam_userdata_path() {
             let path_str = userdata_path.to_string_lossy();
@@ -317,6 +332,8 @@ impl Paths {
     }
 
     /// Check if running in Flatpak
+    /// TODO: Use for Flatpak-specific path adjustments
+    #[allow(dead_code)]
     pub fn is_flatpak() -> bool {
         env::var("FLATPAK_ID").is_ok() || PathBuf::from("/.flatpak-info").exists()
     }
@@ -327,6 +344,8 @@ impl Paths {
     }
 
     /// Get faugus-proton-manager binary path
+    /// TODO: Use for legacy Python binary integration
+    #[allow(dead_code)]
     pub fn faugus_proton_manager() -> Option<PathBuf> {
         Self::find_binary("faugus-proton-manager")
     }
@@ -346,7 +365,9 @@ impl Paths {
         Self::find_binary("gamemoderun")
     }
 
-    /// Get lsfgvk.so path
+    /// Get lsfgvk.so path (Fossilize VK layer)
+    /// TODO: Use for VK layer integration
+    #[allow(dead_code)]
     pub fn lsfgvk_so() -> Option<PathBuf> {
         let possible_paths = vec![
             PathBuf::from("/usr/lib/extensions/vulkan/lsfgvk/lib/liblsfg-vk.so"),
@@ -358,11 +379,6 @@ impl Paths {
             )),
         ];
 
-        for path in possible_paths {
-            if path.exists() {
-                return Some(path);
-            }
-        }
-        None
+        possible_paths.into_iter().find(|path| path.exists())
     }
 }

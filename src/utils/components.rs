@@ -14,11 +14,17 @@ use tracing::info;
 use crate::config::paths::Paths;
 
 /// UMU Launcher URLs
+/// TODO: Use for UMU auto-update feature
+#[allow(dead_code)]
 const UMU_VERSION_API: &str = "https://api.github.com/repos/Faugus/umu-launcher/releases";
+/// TODO: Use for UMU auto-update feature
+#[allow(dead_code)]
 const UMU_URL_TEMPLATE: &str =
     "https://github.com/Faugus/umu-launcher/releases/download/{}/umu-run";
 
 /// Component manager
+/// TODO: Implement anti-cheat component management (EAC, BattlEye)
+#[allow(dead_code)]
 pub struct ComponentManager {
     client: Client,
     install_dir: PathBuf,
@@ -26,6 +32,8 @@ pub struct ComponentManager {
 
 impl ComponentManager {
     /// Create a new component manager
+    /// TODO: Use for component initialization
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self {
             client: Client::builder()
@@ -38,6 +46,8 @@ impl ComponentManager {
     }
 
     /// Get latest UMU version
+    /// TODO: Use for UMU update checking
+    #[allow(dead_code)]
     pub async fn get_latest_umu_version(&self) -> Result<String> {
         let response = self
             .client
@@ -63,6 +73,8 @@ impl ComponentManager {
     }
 
     /// Get installed UMU version
+    /// TODO: Use for UMU update checking
+    #[allow(dead_code)]
     pub fn get_installed_umu_version(&self) -> Option<String> {
         let version_file = self.install_dir.join("version.txt");
 
@@ -76,6 +88,8 @@ impl ComponentManager {
     }
 
     /// Download and install UMU runner
+    /// TODO: Use for UMU auto-update feature
+    #[allow(dead_code)]
     pub async fn download_umu(
         &self,
         version: &str,
@@ -133,6 +147,8 @@ impl ComponentManager {
     }
 
     /// Update UMU runner to latest version
+    /// TODO: Use for UMU auto-update feature
+    #[allow(dead_code)]
     pub async fn update_umu(&self, on_progress: impl Fn(u64, u64)) -> Result<bool> {
         let latest = self.get_latest_umu_version().await?;
         let installed = self.get_installed_umu_version();
@@ -150,26 +166,36 @@ impl ComponentManager {
     }
 
     /// Get EAC component directory
+    /// TODO: Use for EAC installation/management
+    #[allow(dead_code)]
     pub fn eac_dir() -> PathBuf {
         Paths::user_config("faugus-launcher/components/eac")
     }
 
     /// Get BattlEye component directory
+    /// TODO: Use for BattlEye installation/management
+    #[allow(dead_code)]
     pub fn be_dir() -> PathBuf {
         Paths::user_config("faugus-launcher/components/be")
     }
 
     /// Check if EAC is installed
+    /// TODO: Use for EAC status display
+    #[allow(dead_code)]
     pub fn is_eac_installed() -> bool {
         Self::eac_dir().exists()
     }
 
     /// Check if BattlEye is installed
+    /// TODO: Use for BattlEye status display
+    #[allow(dead_code)]
     pub fn is_be_installed() -> bool {
         Self::be_dir().exists()
     }
 
     /// Install EAC component
+    /// TODO: Implement EAC download/installation
+    #[allow(dead_code)]
     pub fn install_eac() -> Result<()> {
         let eac_dir = Self::eac_dir();
         fs::create_dir_all(&eac_dir).context("Failed to create EAC directory")?;
@@ -181,6 +207,8 @@ impl ComponentManager {
     }
 
     /// Install BattlEye component
+    /// TODO: Implement BattlEye download/installation
+    #[allow(dead_code)]
     pub fn install_be() -> Result<()> {
         let be_dir = Self::be_dir();
         fs::create_dir_all(&be_dir).context("Failed to create BattlEye directory")?;
@@ -192,6 +220,8 @@ impl ComponentManager {
     }
 
     /// Check if components need updating
+    /// TODO: Use for component update notifications
+    #[allow(dead_code)]
     pub async fn check_components_update(&self) -> Result<bool> {
         let installed = self.get_installed_umu_version();
         let latest = self.get_latest_umu_version().await?;

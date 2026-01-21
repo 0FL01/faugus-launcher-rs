@@ -1,4 +1,4 @@
-use iced::widget::{button, container, text};
+use iced::widget::{button, container};
 use iced::{Border, Color, Shadow, Vector};
 
 pub mod colors {
@@ -27,7 +27,7 @@ impl DeepSpace {
                 radius: 16.0.into(),
             },
             shadow: Shadow {
-                color: Color::BLACK.into(),
+                color: Color::BLACK,
                 offset: Vector::new(0.0, 4.0),
                 blur_radius: 10.0,
             },
@@ -41,17 +41,20 @@ impl DeepSpace {
             border: Border {
                 color: colors::ACCENT,
                 width: 1.0,
-                radius: 16.0.into(),
+                radius: 12.0.into(),
             },
             shadow: Shadow {
-                color: Color::BLACK.into(),
+                color: Color::BLACK,
                 offset: Vector::new(0.0, 4.0),
                 blur_radius: 20.0,
             },
         }
     }
 
-    pub fn scrollable(_theme: &iced::Theme, _status: iced::widget::scrollable::Status) -> iced::widget::scrollable::Style {
+    pub fn scrollable(
+        _theme: &iced::Theme,
+        _status: iced::widget::scrollable::Status,
+    ) -> iced::widget::scrollable::Style {
         let rail = iced::widget::scrollable::Rail {
             background: Some(colors::SURFACE.into()),
             border: Border {
@@ -102,7 +105,7 @@ impl DeepSpace {
                     radius: 12.0.into(),
                 },
                 shadow: Shadow {
-                    color: colors::ACCENT.into(),
+                    color: colors::ACCENT,
                     offset: Vector::new(0.0, 0.0),
                     blur_radius: 8.0,
                 },
@@ -200,7 +203,7 @@ impl DeepSpace {
                     radius: 12.0.into(),
                 },
                 shadow: Shadow {
-                    color: colors::ACCENT.into(),
+                    color: colors::ACCENT,
                     offset: Vector::new(0.0, 0.0),
                     blur_radius: 12.0,
                 },
@@ -219,7 +222,10 @@ impl DeepSpace {
         }
     }
 
-    pub fn checkbox(_theme: &iced::Theme, status: iced::widget::checkbox::Status) -> iced::widget::checkbox::Style {
+    pub fn checkbox(
+        _theme: &iced::Theme,
+        status: iced::widget::checkbox::Status,
+    ) -> iced::widget::checkbox::Style {
         iced::widget::checkbox::Style {
             background: colors::SURFACE.into(),
             icon_color: colors::ACCENT,
@@ -227,7 +233,9 @@ impl DeepSpace {
                 color: match status {
                     iced::widget::checkbox::Status::Active { .. } => colors::BORDER,
                     iced::widget::checkbox::Status::Hovered { .. } => colors::ACCENT,
-                    iced::widget::checkbox::Status::Disabled { .. } => Color::from_rgb(0.3, 0.3, 0.3),
+                    iced::widget::checkbox::Status::Disabled { .. } => {
+                        Color::from_rgb(0.3, 0.3, 0.3)
+                    }
                 },
                 width: 1.0,
                 radius: 4.0.into(),
@@ -236,7 +244,10 @@ impl DeepSpace {
         }
     }
 
-    pub fn pick_list(_theme: &iced::Theme, status: iced::widget::pick_list::Status) -> iced::widget::pick_list::Style {
+    pub fn pick_list(
+        _theme: &iced::Theme,
+        status: iced::widget::pick_list::Status,
+    ) -> iced::widget::pick_list::Style {
         let border_color = match status {
             iced::widget::pick_list::Status::Active => colors::BORDER,
             iced::widget::pick_list::Status::Hovered => colors::ACCENT,

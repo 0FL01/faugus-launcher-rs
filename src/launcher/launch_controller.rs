@@ -35,7 +35,7 @@ impl GameLaunchController {
 
     /// Get the launch status of a game
     pub fn get_status(&self, title: &str) -> LaunchStatus {
-        let games = self.running_games.lock().unwrap();
+        let games = self.running_games.lock().unwrap_or_else(|e| e.into_inner());
         games
             .get(title)
             .cloned()
@@ -43,6 +43,8 @@ impl GameLaunchController {
     }
 
     /// Check if a game is currently running
+    /// TODO: Use for UI status indicators, double-launch prevention
+    #[allow(dead_code)]
     pub fn is_running(&self, title: &str) -> bool {
         matches!(
             self.get_status(title),
@@ -59,7 +61,7 @@ impl GameLaunchController {
 
         // Set status to launching
         {
-            let mut games = running_games.lock().unwrap();
+            let mut games = running_games.lock().unwrap_or_else(|e| e.into_inner());
             games.insert(title.clone(), LaunchStatus::Launching);
         }
 
@@ -83,7 +85,7 @@ impl GameLaunchController {
 
                         // Update status
                         {
-                            let mut games = running_games.lock().unwrap();
+                            let mut games = running_games.lock().unwrap_or_else(|e| e.into_inner());
                             games.insert(title.clone(), LaunchStatus::Running(process.clone()));
                         }
 
@@ -94,7 +96,7 @@ impl GameLaunchController {
 
                         // Update status
                         {
-                            let mut games = running_games.lock().unwrap();
+                            let mut games = running_games.lock().unwrap_or_else(|e| e.into_inner());
                             games.insert(title.clone(), LaunchStatus::Error(e.to_string()));
                         }
 
@@ -120,7 +122,7 @@ impl GameLaunchController {
 
                 // Remove from running games
                 {
-                    let mut games = self.running_games.lock().unwrap();
+                    let mut games = self.running_games.lock().unwrap_or_else(|e| e.into_inner());
                     games.remove(title);
                 }
 
@@ -152,7 +154,7 @@ impl GameLaunchController {
 
         // Remove from running games
         {
-            let mut games = self.running_games.lock().unwrap();
+            let mut games = self.running_games.lock().unwrap_or_else(|e| e.into_inner());
             games.remove(title);
         }
 
@@ -162,7 +164,7 @@ impl GameLaunchController {
 
     /// Get all running games
     pub fn get_running_games(&self) -> Vec<(String, GameProcess)> {
-        let games = self.running_games.lock().unwrap();
+        let games = self.running_games.lock().unwrap_or_else(|e| e.into_inner());
 
         games
             .iter()
@@ -178,7 +180,7 @@ impl GameLaunchController {
 
     /// Check for dead processes and update status
     pub fn check_processes(&self) -> Vec<String> {
-        let games = self.running_games.lock().unwrap();
+        let games = self.running_games.lock().unwrap_or_else(|e| e.into_inner());
         let mut dead_games = Vec::new();
 
         for (title, status) in games.iter() {

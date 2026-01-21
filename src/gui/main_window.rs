@@ -475,7 +475,6 @@ impl MainWindow {
                     text(&game.title).size(16).style(|_theme: &iced::Theme| {
                         iced::widget::text::Style {
                             color: Some(iced::Color::from_rgb(0.6, 0.6, 0.6)),
-                            ..Default::default()
                         }
                     })
                 } else {
@@ -542,14 +541,13 @@ impl MainWindow {
 
                     // Dim the title if hidden
                     let title_text = if is_hidden {
-                        text(&game.title).size(14).style(|_theme: &iced::Theme| {
+                        text(&game.title).size(16).style(|_theme: &iced::Theme| {
                             iced::widget::text::Style {
                                 color: Some(iced::Color::from_rgb(0.6, 0.6, 0.6)),
-                                ..Default::default()
                             }
                         })
                     } else {
-                        text(&game.title).size(14)
+                        text(&game.title).size(16)
                     };
 
                     let content = column![icon, title_text]
@@ -610,7 +608,6 @@ impl MainWindow {
                     text(&game.title).size(16).style(|_theme: &iced::Theme| {
                         iced::widget::text::Style {
                             color: Some(iced::Color::from_rgb(0.6, 0.6, 0.6)),
-                            ..Default::default()
                         }
                     })
                 } else {
@@ -696,7 +693,6 @@ impl MainWindow {
                     .size(11)
                     .style(|_| iced::widget::text::Style {
                         color: Some(crate::gui::styles::colors::ACCENT),
-                        ..Default::default()
                     })
             }
             LaunchStatus::Launching => {
@@ -704,7 +700,6 @@ impl MainWindow {
                     .size(11)
                     .style(|_| iced::widget::text::Style {
                         color: Some(crate::gui::styles::colors::ACCENT),
-                        ..Default::default()
                     })
             }
             LaunchStatus::Error(ref e) => {
@@ -712,7 +707,6 @@ impl MainWindow {
                     .size(11)
                     .style(|_| iced::widget::text::Style {
                         color: Some(iced::Color::from_rgb(1.0, 0.3, 0.3)),
-                        ..Default::default()
                     })
             }
             LaunchStatus::NotRunning => text("").size(11),
@@ -770,6 +764,8 @@ impl MainWindow {
     }
 
     /// Subscribe to events
+    /// TODO: Add subscriptions for process monitoring, IPC, etc.
+    #[allow(dead_code)]
     pub fn subscription(&self) -> Task<Message> {
         // TODO: Add subscriptions for process monitoring, IPC, etc.
         Task::none()

@@ -266,6 +266,8 @@ impl AppConfig {
     }
 
     /// Update configuration with new values
+    /// TODO: Implement config update UI (settings dialog save)
+    #[allow(dead_code)]
     pub fn update(&mut self, updates: ConfigUpdates) -> Result<()> {
         if let Some(close_on_launch) = updates.close_on_launch {
             self.close_on_launch = close_on_launch;
@@ -345,6 +347,8 @@ impl AppConfig {
 }
 
 /// Partial configuration updates
+/// TODO: Implement config update UI (settings dialog save)
+#[allow(dead_code)]
 pub struct ConfigUpdates {
     pub close_on_launch: Option<bool>,
     pub default_prefix: Option<PathBuf>,

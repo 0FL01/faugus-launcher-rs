@@ -12,6 +12,8 @@ use crate::config::paths::Paths;
 use crate::config::Game;
 
 /// Steam shortcut entry
+/// TODO: Use for Steam shortcut import/export feature
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SteamShortcut {
     pub appid: u32,
@@ -279,6 +281,8 @@ impl SteamShortcuts {
     }
 
     /// Get all shortcuts
+    /// TODO: Use for Steam shortcut UI (import/export)
+    #[allow(dead_code)]
     pub fn get_all(&self) -> Vec<SteamShortcut> {
         let mut shortcuts = Vec::new();
 
@@ -295,6 +299,8 @@ impl SteamShortcuts {
     }
 
     /// Convert Value to SteamShortcut
+    /// TODO: Use for Steam shortcut UI (import/export)
+    #[allow(dead_code)]
     fn value_to_shortcut(&self, obj: &Map<String, Value>) -> Result<SteamShortcut> {
         Ok(SteamShortcut {
             appid: obj.get("appid").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
