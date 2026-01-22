@@ -454,6 +454,7 @@ impl ProtonManagerDialog {
             size_text,
             Space::with_width(Length::Fixed(10.0)),
             action_button,
+            Space::with_width(Length::Fixed(15.0)),
         ]
         .spacing(10)
         .padding(10)
