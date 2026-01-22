@@ -86,7 +86,7 @@ jobs:
           
           # Desktop Entry
           mkdir -p dist/root/usr/share/applications
-          cp packaging/io.github.Faugus.faugus-launcher.desktop dist/root/usr/share/applications/
+          cp packaging/faugus-launcher.desktop dist/root/usr/share/applications/
 
           # Icons
           mkdir -p dist/root/usr/share/icons/hicolor/512x512/apps
