@@ -86,18 +86,7 @@ jobs:
           
           # Desktop Entry
           mkdir -p dist/root/usr/share/applications
-          cat > dist/root/usr/share/applications/io.github.Faugus.faugus-launcher.desktop <<EOF
-          [Desktop Entry]
-          Categories=Game;Utility;
-          Comment=Lightweight launcher for Windows games on Linux using UMU-Launcher
-          Exec=${BIN_NAME} %F
-          Icon=faugus-launcher
-          MimeType=application/x-ms-dos-executable;application/x-msi;application/x-ms-shortcut;application/x-bat;text/x-ms-regedit
-          Name=Faugus Launcher
-          Terminal=false
-          Type=Application
-          StartupNotify=true
-          EOF
+          cp packaging/io.github.Faugus.faugus-launcher.desktop dist/root/usr/share/applications/
 
           # Icons
           mkdir -p dist/root/usr/share/icons/hicolor/512x512/apps

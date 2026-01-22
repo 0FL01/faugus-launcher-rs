@@ -1,0 +1,11 @@
+[Desktop Entry]
+Categories=Game;Utility;
+Comment=Lightweight launcher for Windows games on Linux using UMU-Launcher
+Exec=faugus-launcher %F
+Icon=faugus-launcher
+MimeType=application/x-ms-dos-executable;application/x-msi;application/x-ms-shortcut;application/x-bat
+Name=Faugus Launcher
+Terminal=false
+Type=Application
+StartupNotify=true
+NoDisplay=false
